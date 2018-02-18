@@ -53,8 +53,8 @@ def main():
     
     andVector = np.array([0, 0, 0, 1])
     xorVector = np.array([0, 1, 1, 0])
-    runNTimes(xMatrix, xorVector, 10**6)
-    runNTimes(xMatrix, andVector, 10**6)
+    runNTimes(xMatrix, xorVector, 10**6) #correct 2
+    runNTimes(xMatrix, andVector, 10**6) #correct 7390
 
 if __name__ == "__main__":
     main()
