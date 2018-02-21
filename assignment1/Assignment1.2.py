@@ -4,6 +4,7 @@ import sys
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
+import sklearn
 
 from sklearn import svm, datasets
 from sklearn.model_selection import train_test_split
@@ -45,11 +46,11 @@ def plot_confusion_matrix(cm, classes,
 
 
 
-def classify(img, center):
+def classify(img, center, distanceFunc):
   currentMin = sys.maxsize
   identifiedAs = -1
   for b in range(0, 10):
-    res = euclidianDistance(center[b], img)
+    res = distanceFunc(center[b], img)
     if currentMin > res:
       currentMin = res
       identifedAs = b
@@ -59,7 +60,13 @@ def classify(img, center):
 def euclidianDistance(a, b):
     return np.absolute(np.linalg.norm(a - b))
 
-def trainWith(trainIn, trainOut, fileName, newTitle):
+def pairDistance(a, b):
+    res = sklearn.metrics.pairwise.pairwise_distances([a],[b])
+    #print(res)
+    return res
+
+
+def trainWith(trainIn, trainOut, distanceFunc, fileName, newTitle):
   center = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   meanSum = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   meanOccurence = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -79,7 +86,7 @@ def trainWith(trainIn, trainOut, fileName, newTitle):
   for b in range(0, 10):
     center[b] = meanSum[b] / meanOccurence[b]
     for img in cloud[b]:
-      distance = euclidianDistance(center[b], img)
+      distance = distanceFunc(center[b], img)
       if distance > radius[b]:
         radius[b] = distance
 
@@ -91,7 +98,7 @@ def trainWith(trainIn, trainOut, fileName, newTitle):
   
   for _ in np.nditer(trainOut.T):
     actualNumber = int(trainOut[i])
-    recognizedNumber = classify(trainIn[i], center)
+    recognizedNumber = classify(trainIn[i], center, distanceFunc)
     confusionMatrix[actualNumber][recognizedNumber] += 1
     if (actualNumber == recognizedNumber):
       correctClassifications[actualNumber] += 1
@@ -110,11 +117,13 @@ def trainWith(trainIn, trainOut, fileName, newTitle):
 def main():
     trainIn1 = np.genfromtxt('data/train_in.csv', delimiter=',')
     trainOut1 = np.genfromtxt('data/train_out.csv', delimiter=',')
-    trainWith(trainIn1, trainOut1, "trainingssetconfusionmatrix.png", "Confusion matrix for training set classification")
+    trainWith(trainIn1, trainOut1, pairDistance, "Training Set CM Euklid.png", "Confusion matrix for training set classification")
+    trainWith(trainIn1, trainOut1, euclidianDistance, "Training Set CM Pairwise.png", "Confusion matrix for training set classification")
     
     testIn = np.genfromtxt('data/test_in.csv', delimiter=',')
     testOut = np.genfromtxt('data/test_out.csv', delimiter=',')
-    trainWith(testIn, testOut, "testssetconfusionmatrix.png", "Confusion matrix for test set classification")
+    trainWith(testIn, testOut, pairDistance, "Test Set CM Euklid.png", "Confusion matrix for test set classification")
+    trainWith(testIn, testOut, euclidianDistance, "Test Set CM Pairwise.png", "Confusion matrix for test set classification")
     
 if __name__ == "__main__":
     main()
