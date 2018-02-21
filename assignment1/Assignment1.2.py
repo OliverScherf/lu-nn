@@ -20,11 +20,6 @@ def plot_confusion_matrix(cm, classes,
     """
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        print("Normalized confusion matrix")
-    else:
-        print('Confusion matrix, without normalization')
-
-    print(cm)
 
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
@@ -60,11 +55,12 @@ def classify(img, center, distanceFunc):
 def euclidianDistance(a, b):
     return np.absolute(np.linalg.norm(a - b))
 
-def pairDistance(a, b):
-    res = sklearn.metrics.pairwise.pairwise_distances([a],[b])
-    #print(res)
-    return res
-
+def pairDistanceMaker(algo):
+    def pairDistance(a, b):
+        res = sklearn.metrics.pairwise.pairwise_distances([a],[b], metric=algo)
+        #print(res)
+        return res
+    return pairDistance
 
 def trainWith(trainIn, trainOut, distanceFunc):
   center = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -91,24 +87,28 @@ def trainWith(trainIn, trainOut, distanceFunc):
         radius[b] = distance
   return center      
         
-def classifyDataset(trainOut, trainIn, center, distanceFunc, fileName, newTitle):
+def classifyDataset(setIn, setOut, center, distanceFunc, fileName, newTitle, metric):
   # measure performance by creating confusion matrix
   correctClassifications = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   classificationAmount = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   confusionMatrix = np.zeros([10, 10])
   i = 0
   
-  for _ in np.nditer(trainOut.T):
-    actualNumber = int(trainOut[i])
-    recognizedNumber = classify(trainIn[i], center, distanceFunc)
+  for _ in np.nditer(setOut.T):
+    actualNumber = int(setOut[i])
+    recognizedNumber = classify(setIn[i], center, distanceFunc)
     confusionMatrix[actualNumber][recognizedNumber] += 1
     if (actualNumber == recognizedNumber):
       correctClassifications[actualNumber] += 1
     classificationAmount[actualNumber] += 1
     i += 1
+    
+  sum = 0
+  for i in range(0,10):
+      sum += correctClassifications[i]
+  
+  print("correct classified with "+ metric + " " + str(sum))
 
-  print("confusion matrix is")
-  print(confusionMatrix)
   # Plot non-normalized confusion matrix
   plt.figure()
   plot_confusion_matrix(confusionMatrix, classes=range(0, 10),title=newTitle)
@@ -119,12 +119,10 @@ def main():
     trainOut = np.genfromtxt('data/train_out.csv', delimiter=',')
     testIn = np.genfromtxt('data/test_in.csv', delimiter=',')
     testOut = np.genfromtxt('data/test_out.csv', delimiter=',')
-    #trainWith(trainIn, trainOut, pairDistance, "Training Set CM Euklid.png", "Confusion matrix for training set classification")
-    center = trainWith(trainIn, trainOut, euclidianDistance)
-    classifyDataset(testOut, testIn, center, euclidianDistance, "Training Set CM Euklid.png", "Confusion matrix for training set classification")
-    
-    #trainWith(testIn, testOut, pairDistance, "Test Set CM Euklid.png", "Confusion matrix for test set classification")
-    #trainWith(testIn, testOut, euclidianDistance, "Test Set CM Pairwise.png", "Confusion matrix for test set classification")
-    
+    for metric in ['cityblock', 'cosine', 'euclidean', 'l1', 'l2', 'manhattan']:
+        distFunc = pairDistanceMaker(metric)
+        center = trainWith(trainIn, trainOut, distFunc)
+        classifyDataset(testIn, testOut, center, distFunc, "Training Set CM " + metric + ".png", "Confusion matrix for training set classification with " + metric, metric)
+        
 if __name__ == "__main__":
     main()
