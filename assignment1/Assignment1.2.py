@@ -66,7 +66,7 @@ def pairDistance(a, b):
     return res
 
 
-def trainWith(trainIn, trainOut, distanceFunc, fileName, newTitle):
+def trainWith(trainIn, trainOut, distanceFunc):
   center = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   meanSum = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   meanOccurence = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -89,7 +89,9 @@ def trainWith(trainIn, trainOut, distanceFunc, fileName, newTitle):
       distance = distanceFunc(center[b], img)
       if distance > radius[b]:
         radius[b] = distance
-
+  return center      
+        
+def classifyDataset(trainOut, trainIn, center, distanceFunc, fileName, newTitle):
   # measure performance by creating confusion matrix
   correctClassifications = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   classificationAmount = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -107,23 +109,22 @@ def trainWith(trainIn, trainOut, distanceFunc, fileName, newTitle):
 
   print("confusion matrix is")
   print(confusionMatrix)
-
-  
   # Plot non-normalized confusion matrix
   plt.figure()
   plot_confusion_matrix(confusionMatrix, classes=range(0, 10),title=newTitle)
   plt.savefig(fileName)
   
 def main():
-    trainIn1 = np.genfromtxt('data/train_in.csv', delimiter=',')
-    trainOut1 = np.genfromtxt('data/train_out.csv', delimiter=',')
-    trainWith(trainIn1, trainOut1, pairDistance, "Training Set CM Euklid.png", "Confusion matrix for training set classification")
-    trainWith(trainIn1, trainOut1, euclidianDistance, "Training Set CM Pairwise.png", "Confusion matrix for training set classification")
-    
+    trainIn = np.genfromtxt('data/train_in.csv', delimiter=',')
+    trainOut = np.genfromtxt('data/train_out.csv', delimiter=',')
     testIn = np.genfromtxt('data/test_in.csv', delimiter=',')
     testOut = np.genfromtxt('data/test_out.csv', delimiter=',')
-    trainWith(testIn, testOut, pairDistance, "Test Set CM Euklid.png", "Confusion matrix for test set classification")
-    trainWith(testIn, testOut, euclidianDistance, "Test Set CM Pairwise.png", "Confusion matrix for test set classification")
+    #trainWith(trainIn, trainOut, pairDistance, "Training Set CM Euklid.png", "Confusion matrix for training set classification")
+    center = trainWith(trainIn, trainOut, euclidianDistance)
+    classifyDataset(testOut, testIn, center, euclidianDistance, "Training Set CM Euklid.png", "Confusion matrix for training set classification")
+    
+    #trainWith(testIn, testOut, pairDistance, "Test Set CM Euklid.png", "Confusion matrix for test set classification")
+    #trainWith(testIn, testOut, euclidianDistance, "Test Set CM Pairwise.png", "Confusion matrix for test set classification")
     
 if __name__ == "__main__":
     main()
