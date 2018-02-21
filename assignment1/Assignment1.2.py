@@ -1,3 +1,8 @@
+'''
+Created on 21.02.2018
+
+@author: Matthias Müller-Brockhausen & Oliver Scherf
+'''
 import numpy as np
 import sys
 
@@ -63,10 +68,10 @@ def pairDistanceMaker(algo):
     return pairDistance
 
 def trainWith(trainIn, trainOut, distanceFunc):
-  center = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  meanSum = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  meanOccurence = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  cloud = [[],[],[],[],[],[],[],[],[],[]]
+  center = [0] * 10
+  meanSum = [0] * 10
+  meanOccurence = [0] * 10
+  cloud = [ [] for i in range(10) ]
 
   # fill the cloud with data and prepare fo the computation of the mean for every digit
   i = 0
@@ -78,7 +83,7 @@ def trainWith(trainIn, trainOut, distanceFunc):
     i += 1
 
   # calculate radius and the center for each digit
-  radius = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  radius = [0] * 10
   for b in range(0, 10):
     center[b] = meanSum[b] / meanOccurence[b]
     for img in cloud[b]:
@@ -89,8 +94,8 @@ def trainWith(trainIn, trainOut, distanceFunc):
         
 def classifyDataset(setIn, setOut, center, distanceFunc, fileName, newTitle, metric):
   # measure performance by creating confusion matrix
-  correctClassifications = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  classificationAmount = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  correctClassifications = [0] * 10
+  classificationAmount = [0] * 10
   confusionMatrix = np.zeros([10, 10])
   i = 0
   
