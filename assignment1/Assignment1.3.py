@@ -38,27 +38,26 @@ def main():
     testOut = np.genfromtxt('data/test_out.csv', delimiter=',')
     filteredSetIn, filteredSetOut = filterSet(trainIn, trainOut, [1, 8])
     
-    hist = np.linspace(0.5, 1.9, 30)
-    print(hist)
+    x_axis = np.linspace(0.5, 1.9, 30)
     occurence1 = []
     occurence8 = []
     for i in range(0, len(filteredSetIn)):
         result = extractFeature(filteredSetIn[i])
-        idx = np.where(hist == result)
+        idx = np.where(x_axis == result)
         
         if (filteredSetOut[i] == 1):
             occurence1.append(result)
         else:
             occurence8.append(result)
 
-    plt.hist(occurence1, bins=hist, facecolor='green', alpha=0.5)
-    plt.hist(occurence8, bins=hist, facecolor='blue', alpha=0.5)
-    print(occurence1)
-    print(occurence8)
-
+    hist1 = np.histogram(occurence1, bins=x_axis)
+    hist8 = np.histogram(occurence8, bins=x_axis)
+    print(hist1)
+    plt.plot(x_axis[0:29], hist1[0])
+    plt.plot(x_axis[0:29], hist8[0])
     plt.show()
-    print(np.sum(occurence1))
-    print(np.sum(occurence8))
+    #plt.x_axis(occurence1, bins=x_axis, facecolor='green', alpha=0.5)
+    #plt.x_axis(occurence8, bins=x_axis, facecolor='blue', alpha=0.5)
     
 if __name__ == "__main__":
     main()
