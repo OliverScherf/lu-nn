@@ -7,6 +7,7 @@ import numpy as np
 import sys
 
 import itertools
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn
@@ -15,6 +16,13 @@ from sklearn import svm, datasets
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 from matplotlib.pyplot import plot
+
+def find_nearest(array,value):
+    idx = np.searchsorted(array, value, side="left")
+    if idx > 0 and (idx == len(array) or math.fabs(value - array[idx-1]) < math.fabs(value - array[idx])):
+        return idx-1
+    else:
+        return idx
 
 def extractFeature(img):
     upper = img[0:128] + 1
@@ -31,6 +39,19 @@ def filterSet(setIn, setOut, values):
             filteredSetOut.append(setOut[i])
     return (filteredSetIn, filteredSetOut)
 
+def classify(img, b1, b2, x_axis):
+    res = extractFeature(img)
+    idx = find_nearest(x_axis, res)
+    print(idx)
+    
+    
+    #print(idx, b1[idx], b2[idx])
+
+    if (b1[idx] > b2[idx]):
+        return 1
+    else:
+        return 8
+
 def main():
     trainIn = np.genfromtxt('data/train_in.csv', delimiter=',')
     trainOut = np.genfromtxt('data/train_out.csv', delimiter=',')
@@ -38,26 +59,72 @@ def main():
     testOut = np.genfromtxt('data/test_out.csv', delimiter=',')
     filteredSetIn, filteredSetOut = filterSet(trainIn, trainOut, [1, 8])
     
-    x_axis = np.linspace(0.5, 1.9, 30)
+    
+    STEPS = 15
+    
+    x_axis = np.linspace(0.5, 1.9, STEPS)
+    
     occurence1 = []
     occurence8 = []
     for i in range(0, len(filteredSetIn)):
         result = extractFeature(filteredSetIn[i])
-        idx = np.where(x_axis == result)
         
         if (filteredSetOut[i] == 1):
             occurence1.append(result)
         else:
             occurence8.append(result)
 
-    hist1 = np.histogram(occurence1, bins=x_axis)
-    hist8 = np.histogram(occurence8, bins=x_axis)
+    
+    hist1 = np.histogram(occurence1, bins=STEPS)
+    hist8 = np.histogram(occurence8, bins=STEPS)
     print(hist1)
-    plt.plot(x_axis[0:29], hist1[0])
-    plt.plot(x_axis[0:29], hist8[0])
+    print(len(hist1[0]))
+    
+    
+    numSamples1 = np.sum(hist1[0])
+    numSamples8 = np.sum(hist8[0])
+    numSamples = numSamples1 + numSamples8    
+
+    aPrio1 = numSamples1 / numSamples
+    aPrio8 = numSamples8 / numSamples
+
+    classProbabilty1 = []
+    classProbabilty8 = []
+    for i in range(0, len(hist1[0])):
+        classProbabilty1.append(hist1[0][i] / numSamples1)
+        classProbabilty8.append(hist8[0][i] / numSamples8)
+    
+    bayesProbabilty1 = []
+    bayesProbabilty8 = []
+    
+    
+    for i in range(0, len(hist1[0])):
+        px = classProbabilty1[i] * aPrio1 + classProbabilty8[i] * aPrio8
+        if (px == 0.0):
+            bayesProbabilty1.append(0.5)
+            bayesProbabilty8.append(0.5)
+        else: 
+            bayesProbabilty1.append(classProbabilty1[i] * aPrio1 / px)
+            bayesProbabilty8.append(classProbabilty8[i] * aPrio8 / px)
+    
+    plt.plot(x_axis, bayesProbabilty1)
+    plt.plot(x_axis, bayesProbabilty8)
+   
+   
+    testIn, testOut = filterSet(testIn, testOut, [1, 8])
+    print("Bayes1 Length:", len(bayesProbabilty1))
+    correct = 0
+    total = 0
+    for i in range(0, len(testOut)):
+        total += 1
+        classified = classify(testIn[i], bayesProbabilty1, bayesProbabilty8, x_axis)
+        if (classified == testOut[i]):
+            correct += 1
+        print("Actual: ", testOut[i], "Classified",classify(testIn[i], bayesProbabilty1, bayesProbabilty8, x_axis))
+    
+    print("Correct", correct, "Total", total, "Ratio:", correct/total)
+    
     plt.show()
-    #plt.x_axis(occurence1, bins=x_axis, facecolor='green', alpha=0.5)
-    #plt.x_axis(occurence8, bins=x_axis, facecolor='blue', alpha=0.5)
     
 if __name__ == "__main__":
     main()
