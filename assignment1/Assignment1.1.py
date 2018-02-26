@@ -13,25 +13,29 @@ def main():
     trainOut = np.genfromtxt('data/train_out.csv', delimiter=',')
     
     meanSum = [0] * 10
-    meanOccurence =  [0] * 10
+    occurence =  [0] * 10
     cloud = [ [] for i in range(10) ]
     
     i = 0
     for _ in np.nditer(trainOut.T):
-      recognizedNumber = int(trainOut[i])
-      meanSum[recognizedNumber] += trainIn[i]
-      meanOccurence[recognizedNumber] += 1
-      cloud[recognizedNumber].append(trainIn[i])
+      actualNumber = int(trainOut[i])
+      meanSum[actualNumber] += trainIn[i]
+      occurence[actualNumber] += 1
+      cloud[actualNumber].append(trainIn[i])
       i += 1
     
     center = [0] * 10
     radius = [0] * 10
     for b in range(0, 10):
-      center[b] = meanSum[b] / meanOccurence[b]
+      center[b] = meanSum[b] / occurence[b]
       for img in cloud[b]:
         res = euclidianDistance(center[b], img)
         if res > radius[b]:
           radius[b] = res
+          
+    print("radii are")
+    print(radius)
+    np.savetxt("radius.csv", radius, delimiter=",")
     
     
     totalDistance = np.zeros([10, 10])
