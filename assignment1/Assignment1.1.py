@@ -16,13 +16,11 @@ def main():
     occurence =  [0] * 10
     cloud = [ [] for i in range(10) ]
     
-    i = 0
-    for _ in np.nditer(trainOut.T):
+    for i in range(0, len(trainOut)):
       actualNumber = int(trainOut[i])
       meanSum[actualNumber] += trainIn[i]
       occurence[actualNumber] += 1
       cloud[actualNumber].append(trainIn[i])
-      i += 1
     
     center = [0] * 10
     radius = [0] * 10
