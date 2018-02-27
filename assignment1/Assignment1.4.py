@@ -16,6 +16,7 @@ from sklearn import svm, datasets
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 from matplotlib.pyplot import plot
+from Utils import plot_confusion_matrix
 
 def maxIndex(vector):
     max = -sys.maxsize - 1
@@ -54,12 +55,19 @@ def updateWeights(img, weights, bias, classified, desired):
 def testWith(setIn, setOut, weights, bias):
     total = 0
     correct = 0
+    confusionMatrix = np.zeros((10, 10))
     for i in range(0, len(setIn)):
         total += 1
-        classified = maxIndex(classify(setIn[i], weights, bias))
-        if (classified == setOut[i]):
+        recognized = maxIndex(classify(setIn[i], weights, bias))
+        
+        confusionMatrix[int(setOut[i])][int(recognized)] += 1
+        if (recognized == setOut[i]):
             correct += 1
     
+    plt.figure()
+    plot_confusion_matrix(confusionMatrix, range(0, 10), title="CM for multi class perceptron")
+    plt.savefig("cm_multi_class_perceptron.png")
+    plt.show()
     print("Correct", correct, "Total", total, "Ratio:", correct/total)
         
 
@@ -71,7 +79,7 @@ def main():
     
     weights = np.random.rand(10, 256)
     bias = np.zeros(10)
-    y = np.zeros(10)
+    
     classified = classifyAll(trainIn, weights, bias)
     
     foundMisclassified = True
@@ -85,6 +93,10 @@ def main():
         classified = classifyAll(trainIn, weights, bias)
         print(iteration)
         iteration += 1
+    
+    np.savetxt("weights.csv", weights, delimiter=',')
+
+    weights = np.genfromtxt("weights.csv", delimiter=',')
     
     testWith(testIn, testOut, weights, bias)
     
