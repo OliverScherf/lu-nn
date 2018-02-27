@@ -18,6 +18,8 @@ from sklearn.metrics import confusion_matrix
 from matplotlib.pyplot import plot
 from Utils import plot_confusion_matrix
 
+STEP_SIZE = 1.0
+
 def maxIndex(vector):
     max = -sys.maxsize - 1
     idx = -1
@@ -46,9 +48,9 @@ def updateWeights(img, weights, bias, classified, desired):
     compare = classified[desired]
     for i in range(0, len(classified)):
         if (i == desired):
-            weights[i] = weights[i] + img
+            weights[i] = weights[i] + STEP_SIZE * img
         elif (compare < classified[i]):
-            weights[i] = weights[i] - img
+            weights[i] = weights[i] - STEP_SIZE * img
             
     return weights
 
@@ -78,7 +80,7 @@ def main():
     testOut = np.genfromtxt('data/test_out.csv', delimiter=',')
     
     weights = np.random.rand(10, 256)
-    bias = np.zeros(10)
+    bias = np.ones(10)
     
     classified = classifyAll(trainIn, weights, bias)
     
