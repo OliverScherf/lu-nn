@@ -62,21 +62,22 @@ def main():
     
     STEPS = 15
     
-    x_axis = np.linspace(0.5, 1.9, STEPS)
-    
-    occurence1 = []
-    occurence8 = []
+    features1 = []
+    features8 = []
     for i in range(0, len(filteredSetIn)):
         result = extractFeature(filteredSetIn[i])
         
         if (filteredSetOut[i] == 1):
-            occurence1.append(result)
+            features1.append(result)
         else:
-            occurence8.append(result)
+            features8.append(result)
 
-    
-    hist1 = np.histogram(occurence1, bins=STEPS)
-    hist8 = np.histogram(occurence8, bins=STEPS)
+    plt.figure()
+    hist1 = np.histogram(features1, bins=STEPS)
+    hist8 = np.histogram(features8, bins=STEPS)
+    plt.hist(features1, bins=STEPS)
+    plt.hist(features8, bins=STEPS)
+    plt.savefig("Histogram.png")
     print(hist1)
     print(len(hist1[0]))
     
@@ -107,9 +108,15 @@ def main():
             bayesProbabilty1.append(classProbabilty1[i] * aPrio1 / px)
             bayesProbabilty8.append(classProbabilty8[i] * aPrio8 / px)
     
+    min = np.round((np.amin([np.amin(hist1[1]), np.amin(hist8[1])]) - 0.1))
+    max = np.round(np.amax([np.amax(hist1[1]), np.amax(hist8[1])]) + 0.1)
+    x_axis = np.linspace(min, max, STEPS)
+    
+    plt.figure()
     plt.plot(x_axis, bayesProbabilty1)
     plt.plot(x_axis, bayesProbabilty8)
-   
+    plt.savefig("Bayes for 1 and 8.png")
+    
    
     testIn, testOut = filterSet(testIn, testOut, [1, 8])
     print("Bayes1 Length:", len(bayesProbabilty1))
@@ -123,8 +130,6 @@ def main():
         print("Actual: ", testOut[i], "Classified",classify(testIn[i], bayesProbabilty1, bayesProbabilty8, x_axis))
     
     print("Correct", correct, "Total", total, "Ratio:", correct/total)
-    
-    plt.show()
     
 if __name__ == "__main__":
     main()
