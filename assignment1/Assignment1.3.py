@@ -101,6 +101,7 @@ def main():
     
     for i in range(0, len(hist1[0])):
         px = classProbabilty1[i] * aPrio1 + classProbabilty8[i] * aPrio8
+        # if there are no values for that extracted feature just assume 0.5
         if (px == 0.0):
             bayesProbabilty1.append(0.5)
             bayesProbabilty8.append(0.5)
