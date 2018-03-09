@@ -23,8 +23,19 @@ from numpy.matlib import rand
 def sigmoid(n):
     return 1.0/(1.0+np.exp(-n))
 
+def hyperbolicTangent(n):
+    return np.tanh(n)
+
+def linearRectifier(n):
+    return np.log(1 + np.exp(n))
+    # max(0, n) does'nt work, so we just use the "smooth approximation"
+    #if n < 0.0:
+    #    return 0
+    #else:
+    #    return n
+
 def activationValue(x1,x2, weights):
-    return sigmoid(np.sum([x1, x2] * weights[0:2]) + weights[2])
+    return linearRectifier(np.sum([x1, x2] * weights[0:2]) + weights[2])
         
 def xor_net(x1, x2, weights):
     hidden1 = activationValue(x1, x2, weights[0:3])
@@ -68,7 +79,7 @@ def main():
     weights[8] = 1
     print("Initial Error: ", mse(weights))
     for i in range(0, 2000):
-        weights = weights - 0.2 * grdmse(weights)
+        weights = weights - 0.1 * grdmse(weights)
     print("Verbesserter Error: ", mse(weights))
     print(xor_net(0, 0, weights))
     print(xor_net(0, 1, weights))
