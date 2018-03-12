@@ -1,7 +1,7 @@
 '''
 Created on 10.02.2018
 
-@author: Matthias Müller-Brockhausen & Oliver Scherf
+@author: Group 35
 '''
 import numpy as np
 

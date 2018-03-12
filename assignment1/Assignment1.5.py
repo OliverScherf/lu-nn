@@ -1,7 +1,7 @@
 '''
 Created on 05.03.2018
 
-@author: Matthias Müller-Brockhausen & Oliver Scherf
+@author: Group 35
 '''
 import numpy as np
 import sys
@@ -80,7 +80,6 @@ def getMseFor(weights, ac, learningRate):
     activationFunc = ac
     achievedMse = []
     print("Initial Error: ", mse(weights))
-    achievedMse.append(mse(weights))
     for i in range(0, 2000):
         weights = weights - learningRate * grdmse(weights)
         achievedMse.append(mse(weights))
@@ -96,7 +95,7 @@ def plotMseFor(weights, weightName, learningRate):
     plt.xlabel("Iterations")
     plt.ylabel("MSE")
     plt.title("Learning Rate " + str(learningRate) + ", Weight Initialization Strategy: " + weightName)
-    plt.savefig("mse_" + weightName + "_" + str(learningRate) + ".png")
+    plt.savefig("mse_" + weightName.replace(" ", "") + "_" + str(learningRate).replace(".", "") + ".png")
 
 
 def main():
@@ -108,11 +107,13 @@ def main():
     plotMseFor(weights, "random except biasses are 1", 0.5)
     plotMseFor(weights, "random except biasses are 1", 1)
     plotMseFor(weights, "random except biasses are 1", 2)
+    plotMseFor(weights, "random except biasses are 1", 4)
     weights = np.ones(9)
     plotMseFor(weights, "all 1", 0.1)
     plotMseFor(weights, "all 1", 0.5)
     plotMseFor(weights, "all 1", 1)
     plotMseFor(weights, "all 1", 2)
+    plotMseFor(weights, "all 1", 4)
     weights = np.full(9, 0.5)
     weights[2] = 1
     weights[5] = 1
@@ -121,6 +122,7 @@ def main():
     plotMseFor(weights, "all 0.5 except biasses are 1", 0.5)
     plotMseFor(weights, "all 0.5 except biasses are 1", 1)
     plotMseFor(weights, "all 0.5 except biasses are 1", 2)
+    plotMseFor(weights, "all 0.5 except biasses are 1", 4)
     weights = np.zeros(9)
     weights[2] = 1
     weights[5] = 1
@@ -129,6 +131,7 @@ def main():
     plotMseFor(weights, "all 0 except biasses are 1", 0.5)
     plotMseFor(weights, "all 0 except biasses are 1", 1)
     plotMseFor(weights, "all 0 except biasses are 1", 2)
+    plotMseFor(weights, "all 0 except biasses are 1", 4)
     
     
 if __name__ == "__main__":
