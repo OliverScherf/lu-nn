@@ -39,101 +39,99 @@ def filterSet(setIn, setOut, values):
             filteredSetOut.append(setOut[i])
     return (filteredSetIn, filteredSetOut)
 
-def classify(img, b1, b2, x_axis):
+def classify(img, b1, b2, scale, digit1, digit2):
     res = extractFeature(img)
-    idx = find_nearest(x_axis, res)
-    print(idx)
+    idx = find_nearest(scale, res)
     
-    
-    #print(idx, b1[idx], b2[idx])
-
     if (b1[idx] > b2[idx]):
-        return 1
+        return digit1
     else:
-        return 8
+        return digit2
 
 def main():
     trainIn = np.genfromtxt('data/train_in.csv', delimiter=',')
     trainOut = np.genfromtxt('data/train_out.csv', delimiter=',')
     testIn = np.genfromtxt('data/test_in.csv', delimiter=',')
     testOut = np.genfromtxt('data/test_out.csv', delimiter=',')
-    filteredSetIn, filteredSetOut = filterSet(trainIn, trainOut, [1, 8])
+    
+    digit1 = 8
+    digit2 = 7
+    print("Digits are:", digit1, "and", digit2)
+    filteredSetIn, filteredSetOut = filterSet(trainIn, trainOut, [digit1, digit2])
     
     
     STEPS = 15
     
     features1 = []
-    features8 = []
+    features2 = []
     for i in range(0, len(filteredSetIn)):
         result = extractFeature(filteredSetIn[i])
         
-        if (filteredSetOut[i] == 1):
+        if (filteredSetOut[i] == digit1):
             features1.append(result)
         else:
-            features8.append(result)
+            features2.append(result)
 
     plt.figure()
     hist1 = np.histogram(features1, bins=STEPS)
-    hist8 = np.histogram(features8, bins=STEPS)
-    aa = plt.hist(features1, bins=STEPS, label="#1", alpha=0.7)
-    bb = plt.hist(features8, bins=STEPS, label="#8", alpha=0.7)
+    hist2 = np.histogram(features2, bins=STEPS)
+    aa = plt.hist(features1, bins=STEPS, label="#" + str(digit1), alpha=0.7)
+    bb = plt.hist(features2, bins=STEPS, label="#" + str(digit2), alpha=0.7)
     plt.xlabel("Amount of occurences")
     plt.ylabel("Classified value")
     plt.legend()
     plt.savefig("Histogram.png")
-    print(hist1)
-    print(len(hist1[0]))
     
     
     numSamples1 = np.sum(hist1[0])
-    numSamples8 = np.sum(hist8[0])
-    numSamples = numSamples1 + numSamples8    
+    numSamples2 = np.sum(hist2[0])
+    numSamples = numSamples1 + numSamples2    
 
     aPrio1 = numSamples1 / numSamples
-    aPrio8 = numSamples8 / numSamples
+    aPrio2 = numSamples2 / numSamples
 
     classProbabilty1 = []
-    classProbabilty8 = []
+    classProbabilty2 = []
     for i in range(0, len(hist1[0])):
         classProbabilty1.append(hist1[0][i] / numSamples1)
-        classProbabilty8.append(hist8[0][i] / numSamples8)
+        classProbabilty2.append(hist2[0][i] / numSamples2)
     
     bayesProbabilty1 = []
-    bayesProbabilty8 = []
+    bayesProbabilty2 = []
     
     
     for i in range(0, len(hist1[0])):
-        px = classProbabilty1[i] * aPrio1 + classProbabilty8[i] * aPrio8
+        px = classProbabilty1[i] * aPrio1 + classProbabilty2[i] * aPrio2
         # if there are no values for that extracted feature just assume 0.5
         if (px == 0.0):
             bayesProbabilty1.append(0.5)
-            bayesProbabilty8.append(0.5)
+            bayesProbabilty2.append(0.5)
         else: 
             bayesProbabilty1.append(classProbabilty1[i] * aPrio1 / px)
-            bayesProbabilty8.append(classProbabilty8[i] * aPrio8 / px)
+            bayesProbabilty2.append(classProbabilty2[i] * aPrio2 / px)
     
-    min = np.round((np.amin([np.amin(hist1[1]), np.amin(hist8[1])]) - 0.1))
-    max = np.round(np.amax([np.amax(hist1[1]), np.amax(hist8[1])]) + 0.1)
+    min = np.round((np.amin([np.amin(hist1[1]), np.amin(hist2[1])]) - 0.1))
+    max = np.round(np.amax([np.amax(hist1[1]), np.amax(hist2[1])]) + 0.1)
     x_axis = np.linspace(min, max, STEPS)
     
     plt.figure()
     plt.plot(x_axis, bayesProbabilty1)
-    plt.plot(x_axis, bayesProbabilty8)
-    plt.savefig("Bayes for 1 and 8.png")
+    plt.plot(x_axis, bayesProbabilty2)
+    plt.savefig("Bayes for " + str(digit1) + " and " + str(digit2) + ".png")
     
    
-    testIn, testOut = filterSet(testIn, testOut, [1, 8])
-    print("Bayes1 Length:", len(bayesProbabilty1))
+    testIn, testOut = filterSet(testIn, testOut, [digit1, digit2])
     correct = 0
     total = 0
     for i in range(0, len(testOut)):
         total += 1
-        classified = classify(testIn[i], bayesProbabilty1, bayesProbabilty8, x_axis)
+        classified = classify(testIn[i], bayesProbabilty1, bayesProbabilty2, x_axis, digit1, digit2)
         if (classified == testOut[i]):
             correct += 1
-        print("Actual: ", testOut[i], "Classified",classify(testIn[i], bayesProbabilty1, bayesProbabilty8, x_axis))
     
-    print("Correct", correct, "Total", total, "Ratio:", correct/total)
+    print("Correct classified:", correct)
+    print("Total samples:", total)
+    print("Correct/Incorrect ratio:", correct/total)
     
 if __name__ == "__main__":
     main()
