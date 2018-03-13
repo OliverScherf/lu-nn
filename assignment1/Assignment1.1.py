@@ -43,7 +43,7 @@ def main():
     
     print("distances are")
     print(totalDistance)
-    np.savetxt("distances.csv", totalDistance, delimiter=",")
+    np.savetxt("distances.csv", totalDistance, delimiter=",", fmt='%2.2f')
 
 if __name__ == "__main__":
     main()

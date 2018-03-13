@@ -77,8 +77,8 @@ def main():
     hist2 = np.histogram(features2, bins=STEPS)
     aa = plt.hist(features1, bins=STEPS, label="#" + str(digit1), alpha=0.7)
     bb = plt.hist(features2, bins=STEPS, label="#" + str(digit2), alpha=0.7)
-    plt.xlabel("Amount of occurences")
-    plt.ylabel("Classified value")
+    plt.xlabel("Classified value")
+    plt.ylabel("Amount of occurences")
     plt.legend()
     plt.savefig("Histogram.png")
     

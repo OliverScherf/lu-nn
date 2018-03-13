@@ -82,7 +82,7 @@ def classifyDataset(setIn, setOut, center, distanceFunc, fileName, newTitle, met
   for i in range(0,10):
       sum += correctClassifications[i]
   
-  print("correct classified with "+ metric + " " + str(sum))
+  print("correct classified with "+ metric + " " + str(sum), "Correct/Incorrect ratio:", str(sum/len(setIn)))
 
   # Plot non-normalized confusion matrix
   plt.figure()
@@ -94,10 +94,18 @@ def main():
     trainOut = np.genfromtxt('data/train_out.csv', delimiter=',')
     testIn = np.genfromtxt('data/test_in.csv', delimiter=',')
     testOut = np.genfromtxt('data/test_out.csv', delimiter=',')
+    
+    print("Results for Training set:")
     for metric in ['cityblock', 'cosine', 'euclidean', 'l1', 'l2', 'manhattan']:
         distFunc = pairDistanceMaker(metric)
         center = trainWith(trainIn, trainOut, distFunc)
-        classifyDataset(testIn, testOut, center, distFunc, "Training Set CM " + metric + ".png", "Confusion matrix for training set classification with " + metric, metric)
+        classifyDataset(trainIn, trainOut, center, distFunc, "Training-Set-CM-" + metric + ".png", "Confusion matrix for training set classification (" + metric + " distance)", metric)
+
+    print("Results for Test set:")
+    for metric in ['cityblock', 'cosine', 'euclidean', 'l1', 'l2', 'manhattan']:
+        distFunc = pairDistanceMaker(metric)
+        center = trainWith(trainIn, trainOut, distFunc)
+        classifyDataset(testIn, testOut, center, distFunc, "Test-Set-CM-" + metric + ".png", "Confusion matrix for test set classification (" + metric + " distance)", metric)
         
 if __name__ == "__main__":
     main()

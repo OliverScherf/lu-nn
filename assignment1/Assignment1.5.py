@@ -30,11 +30,6 @@ def hyperbolicTangent(n):
 
 def linearRectifier(n):
     return np.log(1 + np.exp(n))
-    # max(0, n) does'nt work, so we just use the "smooth approximation"
-    #if n < 0.0:
-    #    return 0
-    #else:
-    #    return n
 
 def activationValue(x1,x2, weights):
     global activationFunc
@@ -50,52 +45,76 @@ def xor_net(x1, x2, weights):
 def calculateError(x1, x2, d, weights):    
     return (xor_net(x1, x2, weights) - d) ** 2
 
+xMatrix = np.array([[0, 0, 1, 1],
+                    [0, 1, 0, 1]])
+xorVector = np.array([0, 1, 1, 0])
+
 def grdmse(weights):
-    xMatrix = np.array([[0, 0, 1, 1],
-                        [0, 1, 0, 1]])
-    xorVector = np.array([0, 1, 1, 0])
     e = 10**-3
-    
-    
-    returnVector = np.zeros(9)
+    newWeights = np.zeros(9)
     for j in range(0, 9):
-        sliceWeights0 = copy.copy(weights)
-        sliceWeights0[j] += e
-        returnVector[j]   = ((mse(sliceWeights0) - mse(weights)) / e)
-    return returnVector
+        copiedWeights = copy.copy(weights)
+        copiedWeights[j] += e
+        newWeights[j]   = ((mse(copiedWeights) - mse(weights)) / e)
+    return newWeights
 
 def mse(weights):
-    xMatrix = np.array([[0, 0, 1, 1],
-                        [0, 1, 0, 1]])
-    xorVector = np.array([0, 1, 1, 0])
-    
     error = 0.0
     for i in range(0, len(xorVector)):
         error += calculateError(xMatrix[0][i], xMatrix[1][i], xorVector[i], weights)
     return error
+
+def testNet(weights):
+    misclassified = 0
+    for i in range(0, len(xorVector)): 
+        classified = 0
+        if (xor_net(xMatrix[0][i], xMatrix[1][i], weights) < 0.5):
+            classified = 0
+        else:
+            classified = 1
+        if (xorVector[i] != classified):
+            misclassified += 1
+            
+    return misclassified
 
 
 def getMseFor(weights, ac, learningRate):
     global activationFunc
     activationFunc = ac
     achievedMse = []
+    misclassifiedInputs = []
     print("Initial Error: ", mse(weights))
     for i in range(0, 2000):
         weights = weights - learningRate * grdmse(weights)
         achievedMse.append(mse(weights))
-    return achievedMse
+        misclassifiedInputs.append(testNet(weights))
+    return (achievedMse, misclassifiedInputs)
 
 
-def plotMseFor(weights, weightName, learningRate):
+def plotMseFor(weights, weightInitStrategy, learningRate):
+    (sigmoidMSE, sigmoidMisclassified) = getMseFor(copy.copy(weights), sigmoid, learningRate)
+    (tangentMSE, tangentMisclassfied) = getMseFor(copy.copy(weights), hyperbolicTangent, learningRate)
+    (linRectMSE, linRectMisclassified) = getMseFor(copy.copy(weights), linearRectifier, learningRate)
     plt.figure()
-    plt.plot(getMseFor(copy.copy(weights), sigmoid, learningRate), "-", label="Sigmoid", alpha=0.5)
-    plt.plot(getMseFor(copy.copy(weights), hyperbolicTangent, learningRate), "-.", label="Hyperbolic Tangent", alpha=0.5)
-    plt.plot(getMseFor(copy.copy(weights), linearRectifier, learningRate), "--", label="Linear Rectifier", alpha=0.5)
+    plt.plot(sigmoidMSE, "-",  label="Sigmoid", alpha=0.5)
+    plt.plot(tangentMSE, "-.", label="Hyperbolic Tangent", alpha=0.5)
+    plt.plot(linRectMSE, "--", label="Linear Rectifier", alpha=0.5)
     plt.legend()
     plt.xlabel("Iterations")
     plt.ylabel("MSE")
-    plt.title("Learning Rate " + str(learningRate) + ", Weight Initialization Strategy: " + weightName)
-    plt.savefig("mse_" + weightName.replace(" ", "") + "_" + str(learningRate).replace(".", "") + ".png")
+    plt.title("Learning Rate = " + str(learningRate) + ", Weight Initialization Strategy: " + weightInitStrategy)
+    plt.savefig("mse_" + weightInitStrategy.replace(" ", "") + "_" + str(learningRate).replace(".", "") + ".png")
+
+    plt.figure()
+    plt.plot(sigmoidMisclassified, "-",  label="Sigmoid", alpha=0.5)
+    plt.plot(tangentMisclassfied, "-.", label="Hyperbolic Tangent", alpha=0.5)
+    plt.plot(linRectMisclassified, "--", label="Linear Rectifier", alpha=0.5)
+    plt.legend()
+    plt.xlabel("Iterations")
+    plt.ylabel("Misclassified Inputs")
+    plt.title("Learning Rate " + str(learningRate) + ", Weight Initialization Strategy: " + weightInitStrategy)
+    plt.savefig("misclassification_" + weightInitStrategy.replace(" ", "") + "_" + str(learningRate).replace(".", "") + ".png")
+
 
 
 def main():
@@ -103,11 +122,11 @@ def main():
     weights[2] = 1
     weights[5] = 1
     weights[8] = 1
-    plotMseFor(weights, "random except biasses are 1", 0.1)
-    plotMseFor(weights, "random except biasses are 1", 0.5)
-    plotMseFor(weights, "random except biasses are 1", 1)
-    plotMseFor(weights, "random except biasses are 1", 2)
-    plotMseFor(weights, "random except biasses are 1", 4)
+    plotMseFor(weights, "random", 0.1)
+    plotMseFor(weights, "random", 0.5)
+    plotMseFor(weights, "random", 1)
+    plotMseFor(weights, "random", 2)
+    plotMseFor(weights, "random", 4)
     weights = np.ones(9)
     plotMseFor(weights, "all 1", 0.1)
     plotMseFor(weights, "all 1", 0.5)
@@ -118,20 +137,20 @@ def main():
     weights[2] = 1
     weights[5] = 1
     weights[8] = 1
-    plotMseFor(weights, "all 0.5 except biasses are 1", 0.1)
-    plotMseFor(weights, "all 0.5 except biasses are 1", 0.5)
-    plotMseFor(weights, "all 0.5 except biasses are 1", 1)
-    plotMseFor(weights, "all 0.5 except biasses are 1", 2)
-    plotMseFor(weights, "all 0.5 except biasses are 1", 4)
+    plotMseFor(weights, "all 0.5", 0.1)
+    plotMseFor(weights, "all 0.5", 0.5)
+    plotMseFor(weights, "all 0.5", 1)
+    plotMseFor(weights, "all 0.5", 2)
+    plotMseFor(weights, "all 0.5", 4)
     weights = np.zeros(9)
     weights[2] = 1
     weights[5] = 1
     weights[8] = 1
-    plotMseFor(weights, "all 0 except biasses are 1", 0.1)
-    plotMseFor(weights, "all 0 except biasses are 1", 0.5)
-    plotMseFor(weights, "all 0 except biasses are 1", 1)
-    plotMseFor(weights, "all 0 except biasses are 1", 2)
-    plotMseFor(weights, "all 0 except biasses are 1", 4)
+    plotMseFor(weights, "all 0", 0.1)
+    plotMseFor(weights, "all 0", 0.5)
+    plotMseFor(weights, "all 0", 1)
+    plotMseFor(weights, "all 0", 2)
+    plotMseFor(weights, "all 0", 4)
     
     
 if __name__ == "__main__":
