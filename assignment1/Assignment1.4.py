@@ -18,7 +18,7 @@ from sklearn.metrics import confusion_matrix
 from matplotlib.pyplot import plot
 from Utils import plot_confusion_matrix
 
-STEP_SIZE = 1.0
+LEARNING_RATE = 1.0
 
 def maxIndex(vector):
     max = -sys.maxsize - 1
@@ -48,9 +48,9 @@ def updateWeights(img, weights, bias, classified, desired):
     compare = classified[desired]
     for i in range(0, len(classified)):
         if (i == desired):
-            weights[i] = weights[i] + STEP_SIZE * img
+            weights[i] = weights[i] + LEARNING_RATE * img
         elif (compare < classified[i]):
-            weights[i] = weights[i] - STEP_SIZE * img
+            weights[i] = weights[i] - LEARNING_RATE * img
             
     return weights
 
@@ -60,6 +60,7 @@ def testWith(setIn, setOut, weights, bias):
     confusionMatrix = np.zeros((10, 10))
     for i in range(0, len(setIn)):
         total += 1
+        # We just use the maximum value of the classification vector as the identified digit
         recognized = maxIndex(classify(setIn[i], weights, bias))
         
         confusionMatrix[int(setOut[i])][int(recognized)] += 1
@@ -79,6 +80,8 @@ def main():
     testIn = np.genfromtxt('data/test_in.csv', delimiter=',')
     testOut = np.genfromtxt('data/test_out.csv', delimiter=',')
     
+    #create randon 256 weights for each digit class
+    #because we initialize the weights random, the confusion matrix may vary a bit
     weights = np.random.rand(10, 256)
     bias = np.ones(10)
     
@@ -86,6 +89,7 @@ def main():
     
     foundMisclassified = True
     iteration = 0
+    print("Begin to train the weights")
     while foundMisclassified:
         foundMisclassified = False
         for i in range(0, len(trainIn)):
@@ -93,13 +97,8 @@ def main():
                 foundMisclassified = True
                 weights = updateWeights(trainIn[i], weights, bias, classified[i], trainOut[i])
         classified = classifyAll(trainIn, weights, bias)
-        print(iteration)
         iteration += 1
-    
-    np.savetxt("weights.csv", weights, delimiter=',')
-
-    weights = np.genfromtxt("weights.csv", delimiter=',')
-    
+    print("Took ", iteration, "to reach zero misclassified images.")
     testWith(testIn, testOut, weights, bias)
     
     

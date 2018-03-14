@@ -59,14 +59,15 @@ def main():
     print("Digits are:", digit1, "and", digit2)
     filteredSetIn, filteredSetOut = filterSet(trainIn, trainOut, [digit1, digit2])
     
-    
+    # feature resolution for classification, influeces the computation
+    # of the histogram (15 value on the x-axis)
     STEPS = 15
     
+    # Extract Feature from the filtered set for the two classes
     features1 = []
     features2 = []
     for i in range(0, len(filteredSetIn)):
         result = extractFeature(filteredSetIn[i])
-        
         if (filteredSetOut[i] == digit1):
             features1.append(result)
         else:
@@ -75,10 +76,10 @@ def main():
     plt.figure()
     hist1 = np.histogram(features1, bins=STEPS)
     hist2 = np.histogram(features2, bins=STEPS)
-    aa = plt.hist(features1, bins=STEPS, label="#" + str(digit1), alpha=0.7)
-    bb = plt.hist(features2, bins=STEPS, label="#" + str(digit2), alpha=0.7)
+    plt.hist(features1, bins=STEPS, label="#" + str(digit1), alpha=0.7)
+    plt.hist(features2, bins=STEPS, label="#" + str(digit2), alpha=0.7)
     plt.xlabel("Classified value")
-    plt.ylabel("Amount of occurences")
+    plt.ylabel("Amount of occurrences")
     plt.legend()
     plt.savefig("Histogram.png")
     
@@ -87,19 +88,20 @@ def main():
     numSamples2 = np.sum(hist2[0])
     numSamples = numSamples1 + numSamples2    
 
+    # calculate aprio probabilty
     aPrio1 = numSamples1 / numSamples
     aPrio2 = numSamples2 / numSamples
 
+    # calculate class probabilty
     classProbabilty1 = []
     classProbabilty2 = []
     for i in range(0, len(hist1[0])):
         classProbabilty1.append(hist1[0][i] / numSamples1)
         classProbabilty2.append(hist2[0][i] / numSamples2)
     
+    # calculate bayes probabilty
     bayesProbabilty1 = []
     bayesProbabilty2 = []
-    
-    
     for i in range(0, len(hist1[0])):
         px = classProbabilty1[i] * aPrio1 + classProbabilty2[i] * aPrio2
         # if there are no values for that extracted feature just assume 0.5
@@ -110,6 +112,7 @@ def main():
             bayesProbabilty1.append(classProbabilty1[i] * aPrio1 / px)
             bayesProbabilty2.append(classProbabilty2[i] * aPrio2 / px)
     
+    # ensure that the histogram nicely fits on the plot
     min = np.round((np.amin([np.amin(hist1[1]), np.amin(hist2[1])]) - 0.1))
     max = np.round(np.amax([np.amax(hist1[1]), np.amax(hist2[1])]) + 0.1)
     x_axis = np.linspace(min, max, STEPS)
@@ -120,6 +123,7 @@ def main():
     plt.savefig("Bayes for " + str(digit1) + " and " + str(digit2) + ".png")
     
    
+    # test the classifier
     testIn, testOut = filterSet(testIn, testOut, [digit1, digit2])
     correct = 0
     total = 0

@@ -30,7 +30,7 @@ def classify(img, center, distanceFunc):
 def euclidianDistance(a, b):
     return np.absolute(np.linalg.norm(a - b))
 
-def pairDistanceMaker(algo):
+def pairDistanceFunctionMaker(algo):
     def pairDistance(a, b):
         res = sklearn.metrics.pairwise.pairwise_distances([a],[b], metric=algo)
         #print(res)
@@ -38,45 +38,39 @@ def pairDistanceMaker(algo):
     return pairDistance
 
 def trainWith(trainIn, trainOut, distanceFunc):
-  center = [0] * 10
+  centers = [0] * 10
   meanSum = [0] * 10
   meanOccurence = [0] * 10
   cloud = [ [] for i in range(10) ]
 
-  # fill the cloud with data and prepare fo the computation of the mean for every digit
-  i = 0
-  for _ in np.nditer(trainOut.T):
+  # fill the cloud with data and prepare the computation of the mean for every digit
+  for i in range(0, len(trainIn)):
     actualNumber = int(trainOut[i])
     meanSum[actualNumber] += trainIn[i]
     meanOccurence[actualNumber] += 1
     cloud[actualNumber].append(trainIn[i])
-    i += 1
 
-  # calculate radius and the center for each digit
+  # calculate radius and the centers for each digit
   radius = [0] * 10
   for b in range(0, 10):
-    center[b] = meanSum[b] / meanOccurence[b]
+    centers[b] = meanSum[b] / meanOccurence[b]
     for img in cloud[b]:
-      distance = distanceFunc(center[b], img)
+      distance = distanceFunc(centers[b], img)
       if distance > radius[b]:
         radius[b] = distance
-  return center      
+  return centers
         
-def classifyDataset(setIn, setOut, center, distanceFunc, fileName, newTitle, metric):
+def classifyDataset(setIn, setOut, center, distanceFunc, fileName, imgTitle, metric):
   # measure performance by creating confusion matrix
   correctClassifications = [0] * 10
-  classificationAmount = [0] * 10
   confusionMatrix = np.zeros([10, 10])
-  i = 0
   
-  for _ in np.nditer(setOut.T):
+  for i in range(0, len(setIn)):
     actualNumber = int(setOut[i])
     recognizedNumber = classify(setIn[i], center, distanceFunc)
     confusionMatrix[actualNumber][recognizedNumber] += 1
     if (actualNumber == recognizedNumber):
       correctClassifications[actualNumber] += 1
-    classificationAmount[actualNumber] += 1
-    i += 1
     
   sum = 0
   for i in range(0,10):
@@ -86,7 +80,7 @@ def classifyDataset(setIn, setOut, center, distanceFunc, fileName, newTitle, met
 
   # Plot non-normalized confusion matrix
   plt.figure()
-  plot_confusion_matrix(confusionMatrix, classes=range(0, 10),title=newTitle)
+  plot_confusion_matrix(confusionMatrix, classes=range(0, 10),title=imgTitle)
   plt.savefig(fileName)
   
 def main():
@@ -96,14 +90,15 @@ def main():
     testOut = np.genfromtxt('data/test_out.csv', delimiter=',')
     
     print("Results for Training set:")
+    # note that: euclidean = l2 and manhatten = cityblock = l1
     for metric in ['cityblock', 'cosine', 'euclidean', 'l1', 'l2', 'manhattan']:
-        distFunc = pairDistanceMaker(metric)
+        distFunc = pairDistanceFunctionMaker(metric)
         center = trainWith(trainIn, trainOut, distFunc)
         classifyDataset(trainIn, trainOut, center, distFunc, "Training-Set-CM-" + metric + ".png", "Confusion matrix for training set classification (" + metric + " distance)", metric)
 
     print("Results for Test set:")
     for metric in ['cityblock', 'cosine', 'euclidean', 'l1', 'l2', 'manhattan']:
-        distFunc = pairDistanceMaker(metric)
+        distFunc = pairDistanceFunctionMaker(metric)
         center = trainWith(trainIn, trainOut, distFunc)
         classifyDataset(testIn, testOut, center, distFunc, "Test-Set-CM-" + metric + ".png", "Confusion matrix for test set classification (" + metric + " distance)", metric)
         
