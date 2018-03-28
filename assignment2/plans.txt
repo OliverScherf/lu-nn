@@ -1,0 +1,20 @@
+
+textgeneration
+
+1. alice im wunderland + harry potter txt english besorgen
+2. textgenerierung ausführen, ergebnis davon vergleichen mit vorgegebenem nietzsche text
+3. results aus screen für lstm_textgen holen gleiches für alice + harry
+4. daten aussortieren nochmal ausführen vergleichen
+
+translation
+1. datenset mit den meisten entries
+2. original skript laufen lassen
+3. nicht nächstes wort sondern nächsten buchstaben vorhersagen
+4. (optional) englisch nach deutsch
+
+addition
+1. anstatt substraktion oder multiplikation
+2. testset automatisch generieren durch numpy random
+3. decimal vs binär
+
+x. Report für mlp vs cnn (a1)
