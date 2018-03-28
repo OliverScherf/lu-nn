@@ -68,7 +68,7 @@ def testWith(setIn, setOut, weights, bias):
             correct += 1
     
     plt.figure()
-    plot_confusion_matrix(confusionMatrix, range(0, 10), title="Confusion matrix for training set classification (multiclass perceptron)")
+    plot_confusion_matrix(confusionMatrix, range(0, 10), title="Confusion matrix for test set classification (multiclass perceptron)")
     plt.savefig("cm_multi_class_perceptron.png")
     plt.show()
     print("Correct", correct, "Total", total, "Ratio:", correct/total)
