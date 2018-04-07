@@ -20,11 +20,11 @@ def maxIndex(vector):
     
     return idx
 
-def findMostMisclassifiedDigits(model, x_test, y_test):
+def findMostMisclassifiedDigits(model, x_test, y_test, fileName):
     predicted = model.predict(x_test, batch_size=128)
     
     print("predicated", predicted)
-    np.savetxt("Predicted.csv", predicted, delimiter=",", fmt='%2.2f')
+    np.savetxt(fileName + ".csv", predicted, delimiter=",")
     print(len(x_test))
     
     misclassified = np.zeros(10)
