@@ -16,7 +16,7 @@ from keras import backend as K
 
 batch_size = 128
 num_classes = 10
-epochs = 1
+epochs = 12
 seed = 1337
 
 def getMNISTData():
@@ -78,19 +78,25 @@ def trainModel(x_train, y_train, x_test, y_test, input_shape, lossFunction):
     return (model, x_test, y_test)
 
 def main():
-    #(x_train, y_train, x_test, y_test, input_shape) = getMNISTData()
-    #(model, x_test, y_test) = trainModel(x_train, y_train, x_test, y_test, input_shape, 'categorical_crossentropy')
-    #Utils.findMostMisclassifiedDigits(model, x_test, y_test)
+    (x_train, y_train, x_test, y_test, input_shape) = getMNISTData()
+    (model, x_test, y_test) = trainModel(x_train, y_train, x_test, y_test, input_shape, 'categorical_crossentropy')
+    Utils.findMostMisclassifiedDigits(model, x_test, y_test, "cnn_categorical_crossentropy_non_permuted")
 
-    #(x_train, y_train, x_test, y_test, input_shape) = getMNISTData()
-    #(model, x_test, y_test) = trainModel(x_train, y_train, x_test, y_test, input_shape, 'mean_squared_error')
-    #Utils.findMostMisclassifiedDigits(model, x_test, y_test)
+    (x_train, y_train, x_test, y_test, input_shape) = getMNISTData()
+    (model, x_test, y_test) = trainModel(x_train, y_train, x_test, y_test, input_shape, 'mean_squared_error')
+    Utils.findMostMisclassifiedDigits(model, x_test, y_test, "cnn_mean_squared_error_non_permuted")
+    
+    (x_train, y_train, x_test, y_test, input_shape) = getMNISTData()
+    x_train = Utils.permutateData(x_train, seed)
+    x_test = Utils.permutateData(x_test, seed)
+    (model, x_test, y_test) = trainModel(x_train, y_train, x_test, y_test, input_shape, 'categorical_crossentropy')
+    Utils.findMostMisclassifiedDigits(model, x_test, y_test, "cnn_categorical_crossentropy_permuted")
     
     (x_train, y_train, x_test, y_test, input_shape) = getMNISTData()
     x_train = Utils.permutateData(x_train, seed)
     x_test = Utils.permutateData(x_test, seed)
     (model, x_test, y_test) = trainModel(x_train, y_train, x_test, y_test, input_shape, 'mean_squared_error')
-    Utils.findMostMisclassifiedDigits(model, x_test, y_test)
+    Utils.findMostMisclassifiedDigits(model, x_test, y_test, "cnn_mean_squared_error_non_permuted")
     
     model.summary()
  
