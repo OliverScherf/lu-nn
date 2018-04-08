@@ -18,3 +18,8 @@ addition
 3. decimal vs binär
 
 x. Report für mlp vs cnn (a1)
+
+
+Task 3: 
+for quantifying the results, we could calculate the distance vector between the original image
+and the generated one, compare 
