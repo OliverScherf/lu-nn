@@ -54,9 +54,11 @@ def evaluate(y_test, results):
     
     for i in range(0, len(y_test)):
         samplesPerDigit[y_test[i]] += 1
-        percentageOff[y_test[i]] += 1 - results[i][y_test[i]]
-
-    print(percentageOff)    
+        percentageOff[y_test[i]] += results[i][y_test[i]]
+        
+    percentage = percentageOff/samplesPerDigit * 100 
+    print(np.round(percentage, 2))
+       
     
 if __name__ == "__main__":
     main()
