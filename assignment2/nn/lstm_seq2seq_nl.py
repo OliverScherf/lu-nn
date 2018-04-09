@@ -57,7 +57,7 @@ import numpy as np
 batch_size = 64  # Batch size for training.
 epochs = 100  # Number of epochs to train for.
 latent_dim = 256  # Latent dimensionality of the encoding space.
-num_samples = 10000  # Number of samples to train on.
+num_samples = 21000  # Number of samples to train on.
 # Path to the data txt file on disk.
 data_path = 'nld.txt'
 
@@ -243,6 +243,13 @@ print('Got ' + str(correct) + ' out of selected ' + str(len(toCheck)))
 
 
 correct = 0
+partiallyCorrect = 0
+partials = [1 / 4, 2 / 4, 2 / 3, 3 / 4, 8 / 10]
+partialCorr = [0, 0, 0]
+amountDifferentSentenceLengths = 0
+percentCorrect = 0
+totalPercent = 0
+# only wordoverlap because assumption of grammar no problem as described in lstm blog
 for seq_index in range(len(encoder_input_data)):
     # Take one sequence (part of the training set)
     # for trying out decoding.
@@ -250,6 +257,25 @@ for seq_index in range(len(encoder_input_data)):
     decoded_sentence = decode_sequence(input_seq)
     if decoded_sentence.lower() in target_texts[seq_index].lower():
         correct += 1
-
-print('Got ' + str(correct) + ' out of ' + str(len(encoder_input_data)))
-
+    parts_decoded = decoded_sentence.lower().split(" ")
+    parts_target = target_texts[seq_index].lower().split(" ")
+    sentenceLength = len(parts_target)
+    if len(parts_decoded) != sentenceLength:
+        amountDifferentSentenceLengths += 1
+    currCorr = 0
+    for wordIndex in range(sentenceLength):
+        if parts_target[wordIndex] == parts_decoded[wordIndex]:
+            currCorr += 1
+    totalPercent += 1
+    currPercentCorrect = currCorr / sentenceLength
+    percentCorrect += currPercentCorrect
+    for parIn in range(len(partials)):
+        if currPercentCorrect > sentenceLength / partials[parIn]
+            partialCorr[i] += 1
+    
+inputSize = str(len(encoder_input_data))
+print('Got ' + str(correct) + ' out of ' + inputSize + " which is " + str((correct / len(encoder_input_data)) * 100) + "%")
+print("Different sentence lengths in wanted vs. generated " + str(amountDifferentSentenceLengths) + " / " + inputSize)
+print("Percentage of correctly classified words in sentences " + str((percentCorrect / totalPercent) * 100))
+for parIn in range(len(partials)):
+    print("Sentences where more than " + str(partial[parIn] * 100) + "% was correctly translated: " + partialCorr[parIn] + " which is " + str((partialCorr[parIn] / len(encoder_input_data)) * 100) + "%")
