@@ -29,6 +29,7 @@ Five digits reversed:
 from __future__ import print_function
 from keras.models import Sequential
 from keras import layers
+from keras.models import load_model
 import numpy as np
 from six.moves import range
 
@@ -73,7 +74,7 @@ class colors:
     close = '\033[0m'
 
 # Parameters for the model and dataset.
-TRAINING_SIZE = 300000
+TRAINING_SIZE = 200
 DIGITS = 3
 REVERSE = False
 
@@ -150,6 +151,7 @@ BATCH_SIZE = 128
 LAYERS = 1
 
 print('Build model...')
+'''
 model = Sequential()
 # "Encode" the input sequence using an RNN, producing an output of HIDDEN_SIZE.
 # Note: In a situation where your input sequences have a variable length,
@@ -176,6 +178,7 @@ model.compile(loss='categorical_crossentropy',
               metrics=['accuracy'])
 model.summary()
 
+
 # Train the model each generation and show predictions against the validation
 # dataset.
 for iteration in range(1, 200):
@@ -189,18 +192,26 @@ for iteration in range(1, 200):
     # Select 10 samples from the validation set at random so we can visualize
     # errors.
     model.save("mult.h5")
-    for i in range(10):
-        ind = np.random.randint(0, len(x_val))
-        rowx, rowy = x_val[np.array([ind])], y_val[np.array([ind])]
-        preds = model.predict_classes(rowx, verbose=0)
-        q = ctable.decode(rowx[0])
-        correct = ctable.decode(rowy[0])
-        guess = ctable.decode(preds[0], calc_argmax=False)
-        print('Q', q[::-1] if REVERSE else q, end=' ')
-        print('T', correct, end=' ')
-        if correct == guess:
-            print(colors.ok + '☑' + colors.close, end=' ')
-        else:
-            print(colors.fail + '☒' + colors.close, end=' ')
-        print(guess)
+'''
+
+model = load_model("mult.h5")
+correctResult = 0
+for i in range(100):
+    ind = np.random.randint(0, len(x_val))
+    rowx, rowy = x_val[np.array([ind])], y_val[np.array([ind])]
+    preds = model.predict_classes(rowx, verbose=0)
+    q = ctable.decode(rowx[0])
+    correct = ctable.decode(rowy[0])
+    guess = ctable.decode(preds[0], calc_argmax=False)
+    print('Q', q[::-1] if REVERSE else q, end=' ')
+    print('T', correct, end=' ')
+    if correct == guess:
+        print('r')
+        correctResult += 1
+    else:
+        print('w')
+    print(guess)
+
+print(correctResult)
+
 
