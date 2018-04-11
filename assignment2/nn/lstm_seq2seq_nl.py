@@ -57,7 +57,7 @@ import numpy as np
 batch_size = 64  # Batch size for training.
 epochs = 100  # Number of epochs to train for.
 latent_dim = 256  # Latent dimensionality of the encoding space.
-num_samples = 21000  # Number of samples to train on.
+num_samples = 10000  # Number of samples to train on.
 # Path to the data txt file on disk.
 data_path = 'nld.txt'
 
@@ -121,6 +121,7 @@ for i, (input_text, target_text) in enumerate(zip(input_texts, target_texts)):
             # and will not include the start character.
             decoder_target_data[i, t - 1, target_token_index[char]] = 1.
 
+'''
 # Define an input sequence and process it.
 encoder_inputs = Input(shape=(None, num_encoder_tokens))
 encoder = LSTM(latent_dim, return_state=True)
@@ -152,7 +153,6 @@ model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
 # Save model
 # model.save('s2s.h5')
 
-# model = load_model("s2s.h5")
 
 # Next: inference mode (sampling).
 # Here's the drill:
@@ -180,12 +180,17 @@ decoder_model = Model(
 # something readable.
 reverse_input_char_index = dict(
     (i, char) for char, i in input_token_index.items())
+'''
 reverse_target_char_index = dict(
     (i, char) for char, i in target_token_index.items())
 
-model.save("s1snl_main.h5")
-encoder_model.save("s2snl_enc.h5")
-decoder_model.save("s2snl_dec.h5")
+            
+model = load_model("s2s.h5")
+encoder_model = load_model("s2snl_enc.h5")
+decoder_model = load_model("s2snl_dec.h5")
+#model.save("s2snl_main.h5")
+#encoder_model.save("s2snl_enc.h5")
+#decoder_model.save("s2snl_dec.h5")
 
 def decode_sequence(input_seq):
     # Encode the input as state vectors.
@@ -224,8 +229,6 @@ def decode_sequence(input_seq):
 
     return decoded_sentence
 
-
-
 correct = 0
 toCheck = [165, 168, 178, 326, 385, 455, 458,  514, 515, 523, 619, 767, 832, 864, 865, 986]
 for seq_index in toCheck:
@@ -245,7 +248,7 @@ print('Got ' + str(correct) + ' out of selected ' + str(len(toCheck)))
 correct = 0
 partiallyCorrect = 0
 partials = [1 / 4, 2 / 4, 2 / 3, 3 / 4, 8 / 10]
-partialCorr = [0, 0, 0]
+partialCorr = np.zeros(len(partials))
 amountDifferentSentenceLengths = 0
 percentCorrect = 0
 totalPercent = 0
@@ -262,20 +265,23 @@ for seq_index in range(len(encoder_input_data)):
     sentenceLength = len(parts_target)
     if len(parts_decoded) != sentenceLength:
         amountDifferentSentenceLengths += 1
-    currCorr = 0
-    for wordIndex in range(sentenceLength):
-        if parts_target[wordIndex] == parts_decoded[wordIndex]:
-            currCorr += 1
-    totalPercent += 1
-    currPercentCorrect = currCorr / sentenceLength
-    percentCorrect += currPercentCorrect
-    for parIn in range(len(partials)):
-        if currPercentCorrect > sentenceLength / partials[parIn]
-            partialCorr[i] += 1
+    else:
+        currCorr = 0
+        for wordIndex in range(sentenceLength):
+            if parts_target[wordIndex] == parts_decoded[wordIndex]:
+                currCorr += 1
+        totalPercent += 1
+        currPercentCorrect = currCorr / sentenceLength
+        percentCorrect += currPercentCorrect
+        for parIn in range(len(partials)):
+            if currCorr >= sentenceLength * partials[parIn]:
+                partialCorr[parIn] += 1
     
 inputSize = str(len(encoder_input_data))
 print('Got ' + str(correct) + ' out of ' + inputSize + " which is " + str((correct / len(encoder_input_data)) * 100) + "%")
 print("Different sentence lengths in wanted vs. generated " + str(amountDifferentSentenceLengths) + " / " + inputSize)
 print("Percentage of correctly classified words in sentences " + str((percentCorrect / totalPercent) * 100))
 for parIn in range(len(partials)):
-    print("Sentences where more than " + str(partial[parIn] * 100) + "% was correctly translated: " + partialCorr[parIn] + " which is " + str((partialCorr[parIn] / len(encoder_input_data)) * 100) + "%")
+    print("Sentences where more than " + str(partials[parIn] * 100) + "% was correctly translated: " + str(partialCorr[parIn]) + " which is " + str((partialCorr[parIn] / len(encoder_input_data)) * 100) + "%")
+    
+    
