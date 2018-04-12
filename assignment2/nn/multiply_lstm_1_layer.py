@@ -32,6 +32,7 @@ from keras import layers
 from keras.models import load_model
 import numpy as np
 from six.moves import range
+import matplotlib.pyplot as plt
 
 
 class CharacterTable(object):
@@ -150,68 +151,65 @@ HIDDEN_SIZE = 128
 BATCH_SIZE = 128
 LAYERS = 1
 
-print('Build model...')
-'''
-model = Sequential()
-# "Encode" the input sequence using an RNN, producing an output of HIDDEN_SIZE.
-# Note: In a situation where your input sequences have a variable length,
-# use input_shape=(None, num_feature).
-model.add(RNN(HIDDEN_SIZE, input_shape=(MAXLEN, len(chars))))
-# As the decoder RNN's input, repeatedly provide with the last hidden state of
-# RNN for each time step. Repeat 'DIGITS + 1' times as that's the maximum
-# length of output, e.g., when DIGITS=3, max output is 999+999=1998.
-model.add(layers.RepeatVector(ANSWER_LENGTH))
-# The decoder RNN could be multiple layers stacked or a single layer.
-for _ in range(LAYERS):
-    # By setting return_sequences to True, return not only the last output but
-    # all the outputs so far in the form of (num_samples, timesteps,
-    # output_dim). This is necessary as TimeDistributed in the below expects
-    # the first dimension to be the timesteps.
-    model.add(RNN(HIDDEN_SIZE, return_sequences=True))
-
-# Apply a dense layer to the every temporal slice of an input. For each of step
-# of the output sequence, decide which character should be chosen.
-model.add(layers.TimeDistributed(layers.Dense(len(chars))))
-model.add(layers.Activation('softmax'))
-model.compile(loss='categorical_crossentropy',
-              optimizer='adam',
-              metrics=['accuracy'])
-model.summary()
+def getSampleData(sampleSize):
+    toTry = []
+    for i in range(sampleSize):
+        ind = np.random.randint(0, len(x_val))
+        rowx, rowy = x_val[np.array([ind])], y_val[np.array([ind])]
+        toTry.append((rowx, rowy))
+    return toTry
 
 
-# Train the model each generation and show predictions against the validation
-# dataset.
-for iteration in range(1, 200):
-    print()
-    print('-' * 50)
-    print('Iteration', iteration)
-    model.fit(x_train, y_train,
-              batch_size=BATCH_SIZE,
-              epochs=15,
-              validation_data=(x_val, y_val))
-    # Select 10 samples from the validation set at random so we can visualize
-    # errors.
-    model.save("mult.h5")
-'''
-
-model = load_model("mult.h5")
-correctResult = 0
-for i in range(100):
-    ind = np.random.randint(0, len(x_val))
-    rowx, rowy = x_val[np.array([ind])], y_val[np.array([ind])]
-    preds = model.predict_classes(rowx, verbose=0)
-    q = ctable.decode(rowx[0])
-    correct = ctable.decode(rowy[0])
-    guess = ctable.decode(preds[0], calc_argmax=False)
-    print('Q', q[::-1] if REVERSE else q, end=' ')
-    print('T', correct, end=' ')
-    if correct == guess:
-        print('r')
-        correctResult += 1
-    else:
-        print('w')
-    print(guess)
-
-print(correctResult)
+def evaluateModel(modelName, sampleSize, modelAmount, isStatic=False, toTry=[]):
+    accuracies = []
+    if len(toTry) == 0:
+        toTry = getSampleData(sampleSize)
+    for iteration in range(modelAmount):
+        model = load_model(modelName if isStatic else (modelName + "-" + str(iteration) + ".h5"))
+        correctResult = 0
+        for i in range(len(toTry)):
+            rowx = toTry[i][0]
+            rowy = toTry[i][1]
+            preds = model.predict_classes(rowx, verbose=0)
+            q = ctable.decode(rowx[0])
+            correct = ctable.decode(rowy[0])
+            guess = ctable.decode(preds[0], calc_argmax=False)
+            if correct == guess:
+                correctResult += 1
+        accuracies.append(correctResult / len(toTry))
+    return accuracies
 
 
+def plotAccuracies(accuracies, xTicks):
+    plt.figure()
+    for accuracy in accuracies:
+        plt.plot(accuracy[1], label=accuracy[0])
+    plt.xticks(xTicks)
+    plt.yticks(np.arange(0, 1.0, 0.05))
+    plt.title("Accuracies")
+    tick_marks = np.arange(len(accuracies))
+    plt.ylabel('Accuracy')
+    plt.xlabel('Iteration')
+    plt.savefig("mult.png")
+
+
+accuraciesOfModels = [("mult", evaluateModel("mult", 20, 3))]
+plotAccuracies(accuraciesOfModels, np.arange(len(20)))
+
+modelNames = ["mult-0.h5"]
+sampleSizesToTest = [3, 5, 10]
+samplesToTest = []
+for sampleSize in sampleSizesToTest:
+    samplesToTest.append(getSampleData(sampleSize))
+
+samplePlotData = []
+for modelName in modelNames:
+    results = []
+    for sampleData in samplesToTest:
+        results.append(evaluateModel(modelName, 1, 1, True, sampleData)[0])
+        print("results now is", results)
+    samplePlotData.append((modelName, results))
+    print("sampleplotdata is", samplePlotData)
+
+
+plotAccuracies(samplePlotData)
