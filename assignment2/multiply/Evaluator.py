@@ -33,6 +33,7 @@ from keras.models import load_model
 import numpy as np
 from six.moves import range
 import matplotlib.pyplot as plt
+import os.path
 
 
 class CharacterTable(object):
@@ -160,12 +161,13 @@ def getSampleData(sampleSize):
     return toTry
 
 
-def evaluateModel(modelName, sampleSize, modelAmount, isStatic=False, toTry=[]):
+def evaluateModel(modelName, sampleSize, isStatic=False, toTry=[]):
     accuracies = []
     if len(toTry) == 0:
         toTry = getSampleData(sampleSize)
-    for iteration in range(modelAmount):
-        model = load_model(modelName if isStatic else (modelName + "-" + str(iteration) + ".h5"))
+    iteration = 1
+    while os.path.isfile(modelName + "_" + str(iteration) + ".h5") or (isStatic and iteration == 1):
+        model = load_model(modelName if isStatic else (modelName + "_" + str(iteration) + ".h5"))
         correctResult = 0
         for i in range(len(toTry)):
             rowx = toTry[i][0]
@@ -177,27 +179,29 @@ def evaluateModel(modelName, sampleSize, modelAmount, isStatic=False, toTry=[]):
             if correct == guess:
                 correctResult += 1
         accuracies.append(correctResult / len(toTry))
+        iteration += 1
     return accuracies
 
 
-def plotAccuracies(accuracies, xTicks):
+def plotAccuracies(fileName, accuracies, xTicks, xTicks2=None):
     plt.figure()
     for accuracy in accuracies:
         plt.plot(accuracy[1], label=accuracy[0])
-    plt.xticks(xTicks)
+    plt.xticks(xTicks, xTicks2)
     plt.yticks(np.arange(0, 1.0, 0.05))
     plt.title("Accuracies")
     tick_marks = np.arange(len(accuracies))
     plt.ylabel('Accuracy')
     plt.xlabel('Iteration')
-    plt.savefig("mult.png")
+    plt.savefig(fileName)
 
-
-accuraciesOfModels = [("mult", evaluateModel("mult", 20, 3))]
-plotAccuracies(accuraciesOfModels, np.arange(len(20)))
+sample = getSampleData(1000)
+accuraciesOfModels = [("GRU 1", evaluateModel("gru1/gru1", 1, False, sample))]
+plotAccuracies("accuarcy_by_iteration,png", accuraciesOfModels, np.arange(len(20)))
 
 modelNames = ["mult-0.h5"]
 sampleSizesToTest = [3, 5, 10]
+sampleLabels = map(str, sampleSizesToTest)
 samplesToTest = []
 for sampleSize in sampleSizesToTest:
     samplesToTest.append(getSampleData(sampleSize))
@@ -212,4 +216,8 @@ for modelName in modelNames:
     print("sampleplotdata is", samplePlotData)
 
 
-plotAccuracies(samplePlotData)
+plotAccuracies("accuarcy_by_samplesize,png",samplePlotData, np.arange(len(samplesToTest)), sampleLabels)
+               
+               
+               
+               

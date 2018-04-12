@@ -23,7 +23,8 @@ import random
 import sys
 import io
 
-path = get_file('hp.txt', origin='file:///home/s2084740/nn/hp.txt')
+
+path = get_file('nietzsche.txt', origin='https://s3.amazonaws.com/text-datasets/nietzsche.txt')
 with io.open(path, encoding='utf-8') as f:
     text = f.read().lower()
 print('corpus length:', len(text))
@@ -57,11 +58,12 @@ print('Build model...')
 model = Sequential()
 model.add(LSTM(512, input_shape=(maxlen, len(chars))))
 model.add(Dense(256))
-model.add(RepeatVector(4))
+model.add(RepeatVector(100))
 model.add(LSTM(128))
 model.add(Dense(len(chars)))
 model.add(Activation('softmax'))
 print(model.summary())
+exit()
 
 optimizer = RMSprop(lr=0.01)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer)
