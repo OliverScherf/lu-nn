@@ -14,21 +14,17 @@ import os.path
 
 def main():
     input_img = Input(shape=(28, 28, 1))  # adapt this if using `channels_first` image data format
-    
-    x = Conv2D(16, (3, 3), activation='relu', padding='same')(input_img)
+
+    x = Conv2D(32, (6, 6), activation='relu', padding='same')(input_img)
     x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
-    x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
+    x = Conv2D(32, (6, 6), activation='relu', padding='same')(x)
     encoded = MaxPooling2D((2, 2), padding='same')(x)
     
-    # at this point the representation is (4, 4, 8) i.e. 128-dimensional
+    # at this point the representation is (7, 7, 32)
     
-    x = Conv2D(8, (3, 3), activation='relu', padding='same')(encoded)
+    x = Conv2D(32, (6, 6), activation='relu', padding='same')(encoded)
     x = UpSampling2D((2, 2))(x)
-    x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
-    x = UpSampling2D((2, 2))(x)
-    x = Conv2D(16, (3, 3), activation='relu')(x)
+    x = Conv2D(32, (6, 6), activation='relu', padding='same')(x)
     x = UpSampling2D((2, 2))(x)
     decoded = Conv2D(1, (3, 3), activation='sigmoid', padding='same')(x)
     
@@ -42,20 +38,27 @@ def main():
     x_test = x_test.astype('float32') / 255.
     x_train = np.reshape(x_train, (len(x_train), 28, 28, 1))  # adapt this if using `channels_first` image data format
     x_test = np.reshape(x_test, (len(x_test), 28, 28, 1))  # adapt this if using `channels_first` image data format
-
-    modelFileName = "autoencoder_conv_test.h5"
+    
+    noise_factor = 0.5
+    x_train_noisy = x_train + noise_factor * np.random.normal(loc=0.0, scale=1.0, size=x_train.shape) 
+    x_test_noisy = x_test + noise_factor * np.random.normal(loc=0.0, scale=1.0, size=x_test.shape) 
+    
+    x_train_noisy = np.clip(x_train_noisy, 0., 1.)
+    x_test_noisy = np.clip(x_test_noisy, 0., 1.)
+    
+    modelFileName = "autoencoder_conv_noise_test.h5"
     if (os.path.isfile(modelFileName)):
         autoencoder = load_model(modelFileName)
     else:
-        autoencoder.fit(x_train, x_train,
-                        epochs=50,
-                        batch_size=128,
-                        shuffle=True,
-                        validation_data=(x_test, x_test))
+        autoencoder.fit(x_train_noisy, x_train,
+                    epochs=1,
+                    batch_size=128,
+                    shuffle=True,
+                    validation_data=(x_test_noisy, x_test))
         autoencoder.save(modelFileName)
-
-    
+    exit()
     decoded_imgs = autoencoder.predict(x_test)
+    
     n = 11
     plt.figure(figsize=(20, 4))
     for i in range(1, n):
@@ -65,20 +68,18 @@ def main():
         plt.gray()
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
-    
-        # display reconstruction
+
+        # display noisy
         ax = plt.subplot(3, n, i + n)
-        plt.imshow(decoded_imgs[i].reshape(28, 28))
+        plt.imshow(x_test_noisy[i].reshape(28, 28))
         plt.gray()
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
-
-        # display heatmap
+    
+        # display reconstruction
         ax = plt.subplot(3, n, i + n * 2)
-        plt.imshow((decoded_imgs[i] - x_test[i]).reshape(28, 28))
-        print(np.max(x_test[i]))
-        print(np.max(decoded_imgs[i]))
-        #print(np.min(x_test[i] - decoded_imgs[i]))
+        plt.imshow(decoded_imgs[i].reshape(28, 28))
+        plt.gray()
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
     plt.show()

@@ -20,11 +20,15 @@ def main():
     x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
     x = MaxPooling2D((2, 2), padding='same')(x)
     x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
+    x = MaxPooling2D((2, 2), padding='same')(x)
+    x = Conv2D(4, (3, 3), activation='relu', padding='same')(x)
     encoded = MaxPooling2D((2, 2), padding='same')(x)
     
     # at this point the representation is (4, 4, 8) i.e. 128-dimensional
     
-    x = Conv2D(8, (3, 3), activation='relu', padding='same')(encoded)
+    x = Conv2D(4, (3, 3), activation='relu', padding='same')(encoded)
+    x = UpSampling2D((2, 2))(x)
+    x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
     x = UpSampling2D((2, 2))(x)
     x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
     x = UpSampling2D((2, 2))(x)
@@ -43,12 +47,12 @@ def main():
     x_train = np.reshape(x_train, (len(x_train), 28, 28, 1))  # adapt this if using `channels_first` image data format
     x_test = np.reshape(x_test, (len(x_test), 28, 28, 1))  # adapt this if using `channels_first` image data format
 
-    modelFileName = "autoencoder_conv_test.h5"
+    modelFileName = "autoencoder_conv_test3.h5"
     if (os.path.isfile(modelFileName)):
         autoencoder = load_model(modelFileName)
     else:
         autoencoder.fit(x_train, x_train,
-                        epochs=50,
+                        epochs=1,
                         batch_size=128,
                         shuffle=True,
                         validation_data=(x_test, x_test))

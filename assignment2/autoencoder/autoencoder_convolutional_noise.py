@@ -4,9 +4,11 @@ from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D
 from keras.models import Model
 from keras import backend as K
 from keras.callbacks import TensorBoard
+from keras.models import load_model
 
 import matplotlib.pyplot as plt
 import numpy as np
+import os.path
 
 
 
@@ -28,7 +30,7 @@ def main():
     
     autoencoder = Model(input_img, decoded)
     autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
-    
+    autoencoder.summary()
     
     (x_train, _), (x_test, _) = mnist.load_data()
     
@@ -44,28 +46,17 @@ def main():
     x_train_noisy = np.clip(x_train_noisy, 0., 1.)
     x_test_noisy = np.clip(x_test_noisy, 0., 1.)
     
-    n = 11
-    plt.figure(figsize=(20, 2))
-    for i in range(1, n):
-        ax = plt.subplot(1, n, i)
-        plt.imshow(x_test_noisy[i].reshape(28, 28))
-        plt.gray()
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-    plt.show()
-
-    
-
-
-    autoencoder.fit(x_train_noisy, x_train,
+    modelFileName = "autoencoder_conv_noise_test.h5"
+    if (os.path.isfile(modelFileName)):
+        autoencoder = load_model(modelFileName)
+    else:
+        autoencoder.fit(x_train_noisy, x_train,
                     epochs=1,
                     batch_size=128,
                     shuffle=True,
-                    validation_data=(x_test_noisy, x_test),
-                    callbacks=[TensorBoard(log_dir='/tmp/tb', histogram_freq=0, write_graph=False)])
-
-
-    
+                    validation_data=(x_test_noisy, x_test))
+        autoencoder.save(modelFileName)
+    exit()
     decoded_imgs = autoencoder.predict(x_test)
     
     n = 11

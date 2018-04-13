@@ -34,6 +34,7 @@ import numpy as np
 from six.moves import range
 import matplotlib.pyplot as plt
 import os.path
+import json
 
 
 class CharacterTable(object):
@@ -78,7 +79,6 @@ class colors:
 # Parameters for the model and dataset.
 TRAINING_SIZE = 200
 DIGITS = 3
-REVERSE = False
 
 # Maximum length of input is 'int + int' (e.g., '345+678'). Maximum length of
 # int is DIGITS.
@@ -88,35 +88,9 @@ MAXLEN = DIGITS + 1 + DIGITS
 chars = '0123456789* '
 ctable = CharacterTable(chars)
 ANSWER_LENGTH = 6
-questions = []
-expected = []
-seen = set()
-print('Generating data...')
-while len(questions) < TRAINING_SIZE:
-    f = lambda: int(''.join(np.random.choice(list('0123456789'))
-                    for i in range(np.random.randint(1, DIGITS + 1))))
-    a, b = f(), f()
-    # Skip any addition questions we've already seen
-    # Also skip any such that x+Y == Y+x (hence the sorting).
-    key = tuple(sorted((a, b)))
-    if key in seen:
-        continue
-    seen.add(key)
-    # Pad the data with spaces such that it is always MAXLEN.
-    q = '{}*{}'.format(a, b)
-    query = q + ' ' * (MAXLEN - len(q))
-    ans = str(a * b)
-    while (len(ans) < 6):
-      ans = "0" + ans
-    # Answers can be of maximum size DIGITS + 1.
-    ans += ' ' * (DIGITS + 1 - len(ans))
-    if REVERSE:
-        # Reverse the query, e.g., '12+345  ' becomes '  543+21'. (Note the
-        # space used for padding.)
-        query = query[::-1]
-    questions.append(query)
-    expected.append(ans)
-print('Total addition questions:', len(questions))
+
+questions = json.load(open("test_questions_multiply.json", 'r'))
+expected = json.load(open("test_expected_multiply.json", 'r'))
 
 print('Vectorization...')
 x = np.zeros((len(questions), MAXLEN, len(chars)), dtype=np.bool)
@@ -138,19 +112,6 @@ split_at = len(x) - len(x) // 10
 (x_train, x_val) = x[:split_at], x[split_at:]
 (y_train, y_val) = y[:split_at], y[split_at:]
 
-print('Training Data:')
-print(x_train.shape)
-print(y_train.shape)
-
-print('Validation Data:')
-print(x_val.shape)
-print(y_val.shape)
-
-# Try replacing GRU, or SimpleRNN.
-RNN = layers.LSTM
-HIDDEN_SIZE = 128
-BATCH_SIZE = 128
-LAYERS = 1
 
 def getSampleData(sampleSize):
     toTry = []
@@ -161,13 +122,12 @@ def getSampleData(sampleSize):
     return toTry
 
 
-def evaluateModel(modelName, sampleSize, isStatic=False, toTry=[]):
+def evaluateModel(modelName, toTry):
     accuracies = []
-    if len(toTry) == 0:
-        toTry = getSampleData(sampleSize)
     iteration = 1
-    while os.path.isfile(modelName + "_" + str(iteration) + ".h5") or (isStatic and iteration == 1):
-        model = load_model(modelName if isStatic else (modelName + "_" + str(iteration) + ".h5"))
+    while os.path.isfile(modelName + "_" + str(iteration) + ".h5"):
+        print("Iteration " + str(iteration))
+        model = load_model(modelName + "_" + str(iteration) + ".h5")
         correctResult = 0
         for i in range(len(toTry)):
             rowx = toTry[i][0]
@@ -183,24 +143,29 @@ def evaluateModel(modelName, sampleSize, isStatic=False, toTry=[]):
     return accuracies
 
 
-def plotAccuracies(fileName, accuracies, xTicks, xTicks2=None):
+def plotAccuracies(fileName, accuracies, labels):
     plt.figure()
-    for accuracy in accuracies:
-        plt.plot(accuracy[1], label=accuracy[0])
-    plt.xticks(xTicks, xTicks2)
-    plt.yticks(np.arange(0, 1.0, 0.05))
-    plt.title("Accuracies")
-    tick_marks = np.arange(len(accuracies))
+    for i in range(len(accuracies)):
+        plt.plot(accuracies[i], label=labels[i])
+    plt.yticks(np.arange(0, 1.05, 0.05))
+    plt.title("Accuracies") 
     plt.ylabel('Accuracy')
     plt.xlabel('Iteration')
+    plt.legend()
     plt.savefig(fileName)
 
-sample = getSampleData(1000)
-accuraciesOfModels = [("GRU 1", evaluateModel("gru1/gru1", 1, False, sample))]
-plotAccuracies("accuarcy_by_iteration,png", accuraciesOfModels, np.arange(len(20)))
 
-modelNames = ["mult-0.h5"]
-sampleSizesToTest = [3, 5, 10]
+sample = getSampleData(1000)
+accuracies = []
+labels = ["GRU 1", "GRU 5"]
+accuracies.append(evaluateModel("gru1/gru1", sample))
+accuracies.append(evaluateModel("gru5/gru5", sample))
+plotAccuracies("accuarcy_by_iteration,png", accuracies, labels)
+
+
+'''
+modelNames = ["gru1/gru1_140.h5"]
+sampleSizesToTest = [3, 5, 10, 30, 60, 100, 200, 500, 750, 1000, 3000, 5000]
 sampleLabels = map(str, sampleSizesToTest)
 samplesToTest = []
 for sampleSize in sampleSizesToTest:
@@ -210,14 +175,14 @@ samplePlotData = []
 for modelName in modelNames:
     results = []
     for sampleData in samplesToTest:
-        results.append(evaluateModel(modelName, 1, 1, True, sampleData)[0])
+        results.append(evaluateModel(modelName, 1, True, sampleData)[0])
         print("results now is", results)
     samplePlotData.append((modelName, results))
     print("sampleplotdata is", samplePlotData)
 
 
 plotAccuracies("accuarcy_by_samplesize,png",samplePlotData, np.arange(len(samplesToTest)), sampleLabels)
-               
+'''               
                
                
                
