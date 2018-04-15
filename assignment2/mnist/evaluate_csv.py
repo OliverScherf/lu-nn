@@ -5,7 +5,6 @@ from keras.datasets import mnist
 import matplotlib.pyplot as plt
 import Utils
 import numpy as np
-from reportlab.graphics.charts.axes import _findMax
 
 
 
@@ -74,6 +73,7 @@ def evaluate(y_test, results):
         
     percentage = percentageOff/samplesPerDigit * 100 
     print(np.round(percentage, 2))
+    print("Accuracy:", np.round(np.sum(percentage), 2) / 10)
     
 def findNWorstImages(x_test, y_test, results, n, fileName):
     w, h = 2, len(y_test);
@@ -93,8 +93,8 @@ def findNWorstImages(x_test, y_test, results, n, fileName):
         plt.imshow(x_test[sortedPro[i][0]].reshape(28, 28))
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
-
-    plt.savefig("digits/" + fileName + ".png")
+    plt.show()
+    #plt.savefig("digits/" + fileName + ".png")
     
 def plotImg(img):
     plt.imshow(img.reshape(28, 28))
