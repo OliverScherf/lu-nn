@@ -36,7 +36,6 @@ from six.moves import range
 import matplotlib.pyplot as plt
 import os.path
 import json
-from tensorflow.contrib.timeseries.examples import lstm
 
 
 class CharacterTable(object):
@@ -147,12 +146,12 @@ def evaluateModel(modelName, toTry):
     return accuracies
 
 
-def plotAccuracies(fileName, accuracies, labels):
+def plotAccuracies(fileName, accuracies, labels, colors):
     plt.figure()
     for i in range(len(accuracies)):
-        plt.plot(accuracies[i], label=labels[i])
+        plt.plot(accuracies[i], label=labels[i], color=colors[i])
     plt.yticks(np.arange(0, 1.05, 0.05))
-    plt.title("Accuracies") 
+    plt.title("Learned multiplication accuracy on test set") 
     plt.ylabel('Accuracy')
     plt.xlabel('Iteration')
     plt.legend()
@@ -160,15 +159,18 @@ def plotAccuracies(fileName, accuracies, labels):
 
 
 sample = getSampleData(250)
-#print(accuracies)
-accuracies = []
 gru1Acc = np.loadtxt("gru1Acc.csv", delimiter=',')
+gru1Acc = gru1Acc[0:100]
 gru5Acc = np.loadtxt("gru5Acc.csv", delimiter=',')
 lstm1Acc = np.loadtxt("lstm1Acc.csv", delimiter=',')
+lstm1Acc = lstm1Acc[0:100]
 lstm5Acc = np.loadtxt("lstm5Acc.csv", delimiter=',')
+
 accuracies = [gru1Acc, gru5Acc, lstm1Acc, lstm5Acc]
+colors = ["r", "g", "b", "black"]
 labels = ["1 GRU Layer", "5 GRU Layer", "1 LSTM Layer", "5 LSTM Layer"]
-plotAccuracies("accuarcy_by_iteration.png", accuracies, labels)
+plotAccuracies("accuarcy_by_iteration.png", accuracies, labels, colors)
+#plotAccuracies("accuarcy_by_iteration.png", accuracies, labels)
 
 
 '''

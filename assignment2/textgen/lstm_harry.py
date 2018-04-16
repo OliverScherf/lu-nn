@@ -22,7 +22,7 @@ import random
 import sys
 import io
 
-path = get_file('hp.txt', origin='file:///home/s2084740/nn/hp.txt')
+path = get_file('nietzsche.txt', origin='https://s3.amazonaws.com/text-datasets/nietzsche.txt')
 with io.open(path, encoding='utf-8') as f:
     text = f.read().lower()
 print('corpus length:', len(text))
@@ -44,7 +44,12 @@ print('nb sequences:', len(sentences))
 
 print('Vectorization...')
 x = np.zeros((len(sentences), maxlen, len(chars)), dtype=np.bool)
+print(np.shape(x))
+print(x[0])
 y = np.zeros((len(sentences), len(chars)), dtype=np.bool)
+print(np.shape(y))
+print(y[10])
+exit()
 for i, sentence in enumerate(sentences):
     for t, char in enumerate(sentence):
         x[i, t, char_indices[char]] = 1

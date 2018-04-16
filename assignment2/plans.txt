@@ -23,3 +23,9 @@ x. Report für mlp vs cnn (a1)
 Task 3: 
 for quantifying the results, we could calculate the distance vector between the original image
 and the generated one, compare 
+
+1. Autoencoder Conv vs Conv angepasst 
+2. Autoencoder Deep vs Deep anpasst		
+3. Autoencoder Noise vs Noise angepasst
+-> noise_factor ausprobieren und schauen wo die grenzen sind
+
