@@ -134,13 +134,11 @@ def evaluateModel(modelName, toTry):
             rowx = toTry[i][0]
             rowy = toTry[i][1]
             preds = model.predict_classes(rowx, verbose=0)
-            
             q = ctable.decode(rowx[0])
             correct = ctable.decode(rowy[0])
             guess = ctable.decode(preds[0], calc_argmax=False)
             if correct == guess:
                 correctResult += 1
-                
         accuracies.append(correctResult / len(toTry))
         iteration += 1
     return accuracies
@@ -162,9 +160,8 @@ sample = getSampleData(250)
 #accuracies = np.loadtxt("accuracies.csv", delimiter=',')#[]
 #print(accuracies)
 accuracies = []
-gru1Acc = evaluateModel("gru1/gru1", sample)
-print(gru1Acc)
-np.savetxt("gru1Acc.csv", gru1Acc, delimiter=",")
+lstm1Acc = evaluateModel("lstm1/lstm1", sample)
+np.savetxt("lstm1Acc.csv", lstm1Acc, delimiter=",")
 #gru1Acc = np.loadtxt("gru1Acc.csv", delimiter=",")
 #accuracies.append(gru1Acc)
 #accuracies.append(evaluateModel("gru5/gru5", sample))
