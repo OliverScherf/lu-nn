@@ -47,12 +47,12 @@ def main():
     x_train = np.reshape(x_train, (len(x_train), 28, 28, 1))  # adapt this if using `channels_first` image data format
     x_test = np.reshape(x_test, (len(x_test), 28, 28, 1))  # adapt this if using `channels_first` image data format
 
-    modelFileName = "autoencoder_conv_test3.h5"
+    modelFileName = "conv_mod.h5"
     if (os.path.isfile(modelFileName)):
         autoencoder = load_model(modelFileName)
     else:
         autoencoder.fit(x_train, x_train,
-                        epochs=1,
+                        epochs=100,
                         batch_size=128,
                         shuffle=True,
                         validation_data=(x_test, x_test))

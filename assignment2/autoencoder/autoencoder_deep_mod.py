@@ -63,6 +63,9 @@ def main():
                 shuffle=True,
                 validation_data=(x_test, x_test))
     
+    autoencoder.save("autoencoder_deep_mod.h5")
+    encoder.save("encoder_deep_mod.h5")
+    decoder.save("decoder_deep_mod.h5")
     # encode and decode some digits
     # note that we take them from the *test* set
     encoded_imgs = encoder.predict(x_test)
