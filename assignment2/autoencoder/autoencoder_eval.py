@@ -55,7 +55,7 @@ def autoencoder_conv():
         #print(np.min(x_test[i] - decoded_imgs[i]))
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
-    plt.show()
+    plt.savefig("autoencoder_conv.png")
     
 def autoencoder_conv_mod():
     (x_train, _), (x_test, _) = mnist.load_data()
@@ -98,7 +98,7 @@ def autoencoder_conv_mod():
         #print(np.min(x_test[i] - decoded_imgs[i]))
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
-    plt.show()
+    plt.savefig("autoencoder_conv_mod.png")
 
 def autoencoder_noise():
     (x_train, _), (x_test, _) = mnist.load_data()
@@ -140,7 +140,7 @@ def autoencoder_noise():
         plt.gray()
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
-    plt.show()
+    plt.savefig("autoencoder_noise.png")
 
 def autoencoder_noise_mod():
     (x_train, _), (x_test, _) = mnist.load_data()
@@ -184,7 +184,7 @@ def autoencoder_noise_mod():
         plt.gray()
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
-    plt.show()
+    plt.savefig("autoencoder_noise_mod.png")
 
 def autoencoder_deep():
     (x_train, _), (x_test, _) = mnist.load_data()
@@ -233,7 +233,7 @@ def autoencoder_deep():
         ax.get_yaxis().set_visible(False)
 
 
-    plt.show()
+    plt.savefig("autoencoder_deep.png")
     
 def autoencoder_deep_mod():
     (x_train, _), (x_test, _) = mnist.load_data()
@@ -282,7 +282,7 @@ def autoencoder_deep_mod():
         ax.get_yaxis().set_visible(False)
 
 
-    plt.show()
+    plt.savefig("autoencoder_deep_mod.png")
     
 def calcDistances(orig, decoded, fileName):
     distances = []
@@ -311,7 +311,7 @@ def printDistances():
     plt.title("Energy output from various fuel sources")
     
     plt.xticks(x_pos, x)
-    plt.show()
+    plt.savefig("distances.png")
     
 
 startIndex = 0
