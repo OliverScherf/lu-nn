@@ -43,7 +43,13 @@ def autoencoder_conv():
 
         # display heatmap
         ax = plt.subplot(3, n, i + n * 2)
-        plt.imshow((decoded_imgs[i] - x_test[i]).reshape(28, 28))
+        toShow = x_test[i] - decoded_imgs[i]
+        for j in range(len(toShow)):
+            for k in range(len(toShow[j])):
+                print(toShow[j][k])
+                if (toShow[j][k] < 0.05):
+                    toShow[j][k] = 1.0
+        plt.imshow(toShow.reshape(28, 28))
         print(np.max(x_test[i]))
         print(np.max(decoded_imgs[i]))
         #print(np.min(x_test[i] - decoded_imgs[i]))
@@ -80,7 +86,13 @@ def autoencoder_conv_mod():
 
         # display heatmap
         ax = plt.subplot(3, n, i + n * 2)
-        plt.imshow((decoded_imgs[i] - x_test[i]).reshape(28, 28))
+        toShow = x_test[i] - decoded_imgs[i]
+        for j in range(len(toShow)):
+            for k in range(len(toShow[j])):
+                print(toShow[j][k])
+                if (toShow[j][k] < 0.05):
+                    toShow[j][k] = 1.0
+        plt.imshow(toShow.reshape(28, 28))
         print(np.max(x_test[i]))
         print(np.max(decoded_imgs[i]))
         #print(np.min(x_test[i] - decoded_imgs[i]))
@@ -189,22 +201,38 @@ def autoencoder_deep():
     decoded_imgs = decoder.predict(encoded_imgs)
     calcDistances(x_test, decoded_imgs, "deep")
     
-    n = 10  # how many digits we will display
+    n = 11  # how many digits we will display
     plt.figure(figsize=(20, 4))
-    for i in range(n + startIndex):
-    # display original
-        ax = plt.subplot(2, n, i + 1)
+    for i in range(1 + startIndex, n):
+        # display original
+        ax = plt.subplot(3, n, i)
         plt.imshow(x_test[i].reshape(28, 28))
         plt.gray()
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
     
         # display reconstruction
-        ax = plt.subplot(2, n, i + 1 + n)
+        ax = plt.subplot(3, n, i + n)
         plt.imshow(decoded_imgs[i].reshape(28, 28))
         plt.gray()
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
+
+        # display heatmap
+        ax = plt.subplot(3, n, i + n * 2)
+        toShow = x_test[i] - decoded_imgs[i]
+        for j in range(len(toShow)):
+            print(toShow[j])
+            if (toShow[j] < 0.05):
+                toShow[j] = 1.0
+        plt.imshow(toShow.reshape(28, 28))
+        print(np.max(x_test[i]))
+        print(np.max(decoded_imgs[i]))
+        #print(np.min(x_test[i] - decoded_imgs[i]))
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+
+
     plt.show()
     
 def autoencoder_deep_mod():
@@ -222,22 +250,38 @@ def autoencoder_deep_mod():
     decoded_imgs = decoder.predict(encoded_imgs)
     calcDistances(x_test, decoded_imgs, "deep_mod")
     
-    n = 10  # how many digits we will display
+    n = 11  # how many digits we will display
     plt.figure(figsize=(20, 4))
-    for i in range(n + startIndex):
-    # display original
-        ax = plt.subplot(2, n, i + 1)
+    for i in range(1 + startIndex, n):
+        # display original
+        ax = plt.subplot(3, n, i)
         plt.imshow(x_test[i].reshape(28, 28))
         plt.gray()
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
     
         # display reconstruction
-        ax = plt.subplot(2, n, i + 1 + n)
+        ax = plt.subplot(3, n, i + n)
         plt.imshow(decoded_imgs[i].reshape(28, 28))
         plt.gray()
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
+
+        # display heatmap
+        ax = plt.subplot(3, n, i + n * 2)
+        toShow = x_test[i] - decoded_imgs[i]
+        for j in range(len(toShow)):
+            print(toShow[j])
+            if (toShow[j] < 0.05):
+                toShow[j] = 1.0
+        plt.imshow(toShow.reshape(28, 28))
+        print(np.max(x_test[i]))
+        print(np.max(decoded_imgs[i]))
+        #print(np.min(x_test[i] - decoded_imgs[i]))
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+
+
     plt.show()
     
 def calcDistances(orig, decoded, fileName):
@@ -272,10 +316,10 @@ def printDistances():
 
 startIndex = 0
 
-#printDistances()
-#autoencoder_conv()
-#autoencoder_conv_mod()
+autoencoder_conv()
+autoencoder_conv_mod()
 autoencoder_noise()
 autoencoder_noise_mod()
-#autoencoder_deep()
-#autoencoder_deep_mod()
+autoencoder_deep()
+autoencoder_deep_mod()
+printDistances()
