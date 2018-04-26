@@ -38,17 +38,20 @@ def linearRectifier(n):
 def activationValue(x1,x2, weights):
     global activationFunc
     return activationFunc(np.sum([x1, x2] * weights[0:2]) + weights[2])
-        
+
+
+# == teil von forward()  
 def xor_net(x1, x2, weights):
     hidden1 = activationValue(x1, x2, weights[0:3])
     hidden2 = activationValue(x1, x2, weights[3:6])
     output = activationValue(hidden1, hidden2, weights[6:9])
     return output
     
-
+# == teil von forward()
 def squaredError(x1, x2, d, weights):    
     return (xor_net(x1, x2, weights) - d) ** 2
 
+# backward()
 def grdmse(weights):
     # approximate derivation
     e = 10**-3
@@ -59,6 +62,7 @@ def grdmse(weights):
         newWeights[j]   = ((mse(copiedWeights) - mse(weights)) / e)
     return newWeights
 
+# == teil von forward()
 def mse(weights):
     error = 0.0
     for i in range(0, len(xorVector)):
