@@ -4,6 +4,7 @@ from io import StringIO
 import numpy as np
 import scipy.ndimage as nd
 import PIL.Image
+import bilateral
 from IPython.display import clear_output, Image, display
 from google.protobuf import text_format
 
@@ -14,15 +15,7 @@ import caffe
 # caffe.set_mode_gpu()
 # caffe.set_device(0) # select GPU device if multiple devices exist
 
-'''
-Speichert Array in ein Bild
-'''
-def showarray(a, fmt='jpeg', fileName='deep'):
-    a = np.uint8(np.clip(a, 0, 255))
-    f = StringIO()
-    arr = PIL.Image.fromarray(a)
-    arr.save(fileName + ".jpg", fmt)
-    display(Image(data=f.getvalue()))
+global guide_features
     
 # NN laden
 model_path = 'models/' # substitute your path here
@@ -36,9 +29,15 @@ text_format.Merge(open(net_fn).read(), model)
 model.force_backward = True
 open('tmp.prototxt', 'w').write(str(model))
 
-net = caffe.Classifier('tmp.prototxt', param_fn,
-                       mean = np.float32([104.0, 116.0, 122.0]), # ImageNet mean, training set dependent
-                       channel_swap = (2,1,0)) # the reference model has channels in BGR order instead of RGB
+'''
+Speichert Array in ein Bild
+'''
+def showarray(a, fmt='jpeg', fileName='deep'):
+    a = np.uint8(np.clip(a, 0, 255))
+    f = StringIO()
+    arr = PIL.Image.fromarray(a)
+    arr.save(fileName + ".jpg", fmt)
+    display(Image(data=f.getvalue()))
 
 # a couple of utility functions for converting to and from Caffe's input image layout
 def preprocess(net, img):
@@ -48,13 +47,35 @@ def deprocess(net, img):
     return np.dstack((img + net.transformer.mean['data'])[::-1])
 
 #euclidean distance
+def objective_L2_neuron(dst):
+    # überschreibe kompletten Array
+    print(dst.data.shape)
+    print(dst.diff.shape)
+    neuron = 30
+    dst.diff[:, neuron] = dst.data[:, neuron]
+
+#euclidean distance
 def objective_L2(dst):
     # überschreibe kompletten Array
-    dst.diff[:] = dst.data 
+    print(dst.data.shape)
+    print(dst.diff.shape)
+    dst.diff[:] = dst.data
+    
+def objective_L2_max(dst):
+    x = dst.data[0].copy()
+    y = guide_features
+    ch = x.shape[0]
+    x = x.reshape(ch,-1)
+    y = y.reshape(ch,-1)
+    A = x.T.dot(y) # compute the matrix of dot-products with guide features
+    # select ones that match best (neuron der am meisten aktiviert wurde)
+    dst.diff[0].reshape(ch,-1)[:] = y[:,A.argmax(1)] 
 
+def no_filter(img):
+    return img
 
 def make_step(net, step_size=1.5, end_layer='inception_4c/output', 
-              jitter=32, clip=True, objective=objective_L2):
+              jitter=32, clip=True, objective=objective_L2, filter_func=no_filter):
     '''Basic gradient ascent step.'''
 
     # input image is stored in Net's 'data' blob
@@ -86,6 +107,7 @@ def make_step(net, step_size=1.5, end_layer='inception_4c/output',
     # für Deep Dream nicht verwendet
     gradients = src.diff[0]
     
+    
     # apply normalized ascent step to the input image
     # Passe Bild mit der errechneten Differenz an
     # "Abschwächen" der Änderung
@@ -93,7 +115,7 @@ def make_step(net, step_size=1.5, end_layer='inception_4c/output',
     
     # unshift image
     src.data[0] = np.roll(np.roll(src.data[0], -ox, -1), -oy, -2) 
-            
+    src.data[0] = filter_func(src.data[0])
     if clip:
         bias = net.transformer.mean['data']
         src.data[:] = np.clip(src.data, -bias, 255-bias)
@@ -144,40 +166,6 @@ def deepdream(net, base_img, iter_n=10, octave_n=4, octave_scale=1.4,
     # returning the resulting image
     return deprocess(net, src.data[0])
 
-img = np.float32(PIL.Image.open('images/forest.jpg'))
-
-_=deepdream(net, img)
-
-_=deepdream(net, img, end='inception_3b/5x5_reduce')
-
-net.blobs.keys()
-
-frame = img
-frame_i = 0
-
-
-h, w = frame.shape[:2]
-s = 0.05 # scale coefficient
-for i in range(100):
-    frame = deepdream(net, frame)
-    PIL.Image.fromarray(np.uint8(frame)).save("frames/%04d.jpg"%frame_i)
-    frame = nd.affine_transform(frame, [1-s,1-s,1], [h*s/2,w*s/2,0], order=1)
-    frame_i += 1
-
-
-
-guide = np.float32(PIL.Image.open('images/black.jpg'))
-
-end = 'inception_3b/output'
-h, w = guide.shape[:2]
-src, dst = net.blobs['data'], net.blobs[end]
-src.reshape(1,3,h,w)
-
-# anstatt leerem Bild mit Guide anfangen
-src.data[0] = preprocess(net, guide)
-net.forward(end=end)
-guide_features = dst.data[0].copy()
-
 def objective_guide(dst):
     x = dst.data[0].copy()
     y = guide_features
@@ -187,9 +175,48 @@ def objective_guide(dst):
     A = x.T.dot(y) # compute the matrix of dot-products with guide features
     # select ones that match best (neuron der am meisten aktiviert wurde)
     dst.diff[0].reshape(ch,-1)[:] = y[:,A.argmax(1)] 
+
+def make_frames(net, img):
+    net.blobs.keys()
+    frame = img
+    frame_i = 0
+
+    h, w = frame.shape[:2]
+    s = 0.05 # scale coefficient
+    for i in range(100):
+        frame = deepdream(net, frame)
+        PIL.Image.fromarray(np.uint8(frame)).save("frames/%04d.jpg"%frame_i)
+        frame = nd.affine_transform(frame, [1-s,1-s,1], [h*s/2,w*s/2,0], order=1)
+        frame_i += 1
     
 
-_=deepdream(net, img, end=end, objective=objective_guide)
+def main():
+    net = caffe.Classifier('tmp.prototxt', param_fn,
+                           mean = np.float32([104.0, 116.0, 122.0]), # ImageNet mean, training set dependent
+                           channel_swap = (2,1,0)) # the reference model has channels in BGR order instead of RGB
+    
+    img = np.float32(PIL.Image.open('images/forest.jpg'))
+    
+    _=deepdream(net, img, end='inception_4d/5x5')
+    return
+    #_=deepdream(net, img)
+    
+    make_frames(net, img)
+    
+    
+    guide = np.float32(PIL.Image.open('images/black.jpg'))
+    end = 'inception_3b/output'
+    h, w = guide.shape[:2]
+    src, dst = net.blobs['data'], net.blobs[end]
+    src.reshape(1,3,h,w)
 
+    # anstatt leerem Bild mit Guide anfangen
+    src.data[0] = preprocess(net, guide)
+    net.forward(end=end)
+    guide_features = dst.data[0].copy()   
 
+    _=deepdream(net, img, end=end, objective=objective_guide)
+
+if __name__ == "__main__":
+    main()
  
