@@ -4,9 +4,9 @@ from io import StringIO
 import numpy as np
 import scipy.ndimage as nd
 import PIL.Image
-import bilateral
 from IPython.display import clear_output, Image, display
 from google.protobuf import text_format
+import cv2
 
 import caffe
 
@@ -74,8 +74,11 @@ def objective_L2_max(dst):
 def no_filter(img):
     return img
 
+def bilateral_filter(img):
+    return cv2.bilateralFilter(img,15,10,10)
+
 def make_step(net, step_size=1.5, end_layer='inception_4c/output', 
-              jitter=32, clip=True, objective=objective_L2, filter_func=no_filter):
+              jitter=32, clip=True, objective=objective_L2, bilateral=False):
     '''Basic gradient ascent step.'''
 
     # input image is stored in Net's 'data' blob
@@ -115,7 +118,10 @@ def make_step(net, step_size=1.5, end_layer='inception_4c/output',
     
     # unshift image
     src.data[0] = np.roll(np.roll(src.data[0], -ox, -1), -oy, -2) 
-    src.data[0] = filter_func(src.data[0])
+    if (bilateral):
+        src.data[0] = preprocess(net, bilateral_filter(deprocess(net, src.data[0])))
+    
+    
     if clip:
         bias = net.transformer.mean['data']
         src.data[:] = np.clip(src.data, -bias, 255-bias)
@@ -197,7 +203,7 @@ def main():
     
     img = np.float32(PIL.Image.open('images/forest.jpg'))
     
-    _=deepdream(net, img, end='inception_4d/5x5')
+    _=deepdream(net, img, end='inception_4d/5x5', bilateral=True)
     return
     #_=deepdream(net, img)
     
