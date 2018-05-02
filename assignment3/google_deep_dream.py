@@ -7,6 +7,7 @@ import PIL.Image
 from IPython.display import clear_output, Image, display
 from google.protobuf import text_format
 import cv2
+import getlayers
 
 import caffe
 
@@ -17,18 +18,6 @@ import caffe
 
 global guide_features
     
-# NN laden
-model_path = 'models/' # substitute your path here
-net_fn   = model_path + 'deploy.prototxt'
-param_fn = model_path + 'bvlc_googlenet.caffemodel'
-
-# Patching model to be able to compute gradients.
-# Note that you can also manually add "force_backward: true" line to "deploy.prototxt".
-model = caffe.io.caffe_pb2.NetParameter()
-text_format.Merge(open(net_fn).read(), model)
-model.force_backward = True
-open('tmp.prototxt', 'w').write(str(model))
-
 '''
 Speichert Array in ein Bild
 '''
@@ -38,6 +27,7 @@ def showarray(a, fmt='jpeg', fileName='deep'):
     arr = PIL.Image.fromarray(a)
     arr.save(fileName + ".jpg", fmt)
     display(Image(data=f.getvalue()))
+
 
 # a couple of utility functions for converting to and from Caffe's input image layout
 def preprocess(net, img):
@@ -49,16 +39,12 @@ def deprocess(net, img):
 #euclidean distance
 def objective_L2_neuron(dst):
     # überschreibe kompletten Array
-    print(dst.data.shape)
-    print(dst.diff.shape)
     neuron = 30
     dst.diff[:, neuron] = dst.data[:, neuron]
 
 #euclidean distance
 def objective_L2(dst):
     # überschreibe kompletten Array
-    print(dst.data.shape)
-    print(dst.diff.shape)
     dst.diff[:] = dst.data
     
 def objective_L2_max(dst):
@@ -164,7 +150,7 @@ def deepdream(net, base_img, iter_n=10, octave_n=4, octave_scale=1.4,
             vis = deprocess(net, src.data[0])
             if not clip: # adjust image contrast if clipping is disabled
                 vis = vis*(255.0/np.percentile(vis, 99.98))
-            showarray(vis, fileName= end.replace("/","_") + "_step_" + str(i))
+            #showarray(vis, fileName= end.replace("/","_") + "_step_" + str(i))
             clear_output(wait=True)
             
         # extract details produced on the current octave_idx
@@ -195,15 +181,64 @@ def make_frames(net, img):
         frame = nd.affine_transform(frame, [1-s,1-s,1], [h*s/2,w*s/2,0], order=1)
         frame_i += 1
     
+def gauss(mean,sigma):
+    from random import uniform
+    from math import sqrt,log,pi,cos
+    a=uniform(0,1)
+    b=uniform(0,1)
+    x=sqrt(-2*log(a))*cos(2*pi*b)
+    return(x)
+
+def bruiter(image):
+    from matplotlib.pyplot import imread
+    if len(image.shape)==3 :
+        a,b,c=image.shape
+        for i in range(a):
+            for j in range(b):
+                image[i][j] += [gauss(0.5,0.01),gauss(0.5,0.01),gauss(0.5,0.01)]
+
+    elif len(image.shape)==2 :
+        a,b= image.shape
+        for i in range(a):
+            for j in range(b):
+                image[i][j] +=  gauss(0.01)*(1/255)
+    return(image)
+
 
 def main():
+    # NN laden
+    model_path = 'models/' # substitute your path here
+    net_fn   = model_path + 'resnet152.prototxt'
+    param_fn = model_path + 'resnet152.caffemodel'
+    
+    # Patching model to be able to compute gradients.
+    # Note that you can also manually add "force_backward: true" line to "deploy.prototxt".
+    model = caffe.io.caffe_pb2.NetParameter()
+    text_format.Merge(open(net_fn).read(), model)
+    model.force_backward = True
+    open('tmp.prototxt', 'w').write(str(model))
+    
     net = caffe.Classifier('tmp.prototxt', param_fn,
                            mean = np.float32([104.0, 116.0, 122.0]), # ImageNet mean, training set dependent
                            channel_swap = (2,1,0)) # the reference model has channels in BGR order instead of RGB
     
-    img = np.float32(PIL.Image.open('images/forest.jpg'))
-    
-    _=deepdream(net, img, end='inception_4d/5x5', bilateral=True)
+    layers = getlayers.getLayersFromFile("models/resnet152.prototxt")
+    print(layers)
+    images = ['alpsted-landscape']
+    # 'dean-landscape', 'elvin-leiden', 'pacific-leiden', 'noise']
+    #images = ['elvin-leiden']
+    #images = ['dean-landscape']
+    #images = ['pacific-leiden']
+    #images = ['noise']
+    for im in images:
+        i = 50
+        for layer in layers[50:]:
+            print(layer)
+            i += 1
+            img = np.float32(PIL.Image.open('images/' + im + '.jpg'))
+            dreamed_img = deepdream(net, img, end=layer)
+            showarray(dreamed_img, fileName=im + "/" + str(i) + "_" + im + "_" + layer)
+            
     return
     #_=deepdream(net, img)
     
